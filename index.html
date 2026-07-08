@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TFT Set 17, By The Numbers -- Samuel Bingham</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/jpeg" href="thumbnail.jpg" />
+  <meta property="og:title" content="TFT Set 17, By The Numbers: A SQL Analysis" />
+  <meta property="og:description" content="A SQL-driven analysis of 556 ranked Teamfight Tactics games from my own Set 17 Challenger climb -- pulled from Riot's API into SQLite and queried like a PM would query product data." />
+  <meta property="og:image" content="https://samuelbingham07.github.io/TFTSet17SQLAnalysis/thumbnail.jpg" />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://samuelbingham07.github.io/TFTSet17SQLAnalysis/thumbnail.jpg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <nav class="sidebar">
+    <div class="sidebar-inner">
+      <div class="sidebar-brand"><a href="https://samuelbingham07.github.io/portfolio/" target="_blank" rel="noopener" class="brand-link">Samuel Bingham</a></div>
+      <ul class="sidebar-nav">
+        <li><a href="#overview" class="nav-link active">Overview</a></li>
+        <li><a href="#methodology" class="nav-link">Methodology</a></li>
+        <li><a href="#findings" class="nav-link">Findings</a>
+          <ul class="nav-sub">
+            <li><a href="#find-1" class="nav-link-sub">1. Trait Performance</a></li>
+            <li><a href="#find-2" class="nav-link-sub">2. Economy vs. Placement</a></li>
+            <li><a href="#find-3" class="nav-link-sub">3. Comp Identification</a></li>
+            <li><a href="#find-4" class="nav-link-sub">4. Performance Trend</a></li>
+            <li><a href="#find-5" class="nav-link-sub">5. Damage Output</a></li>
+          </ul>
+        </li>
+        <li><a href="#limitations" class="nav-link">Limitations</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="content">
+
+    <header class="hero">
+      <h1 class="hero-title">TFT Set 17, By The Numbers</h1>
+      <div class="hero-meta">
+        <a href="https://samuelbingham07.github.io/portfolio/" target="_blank" rel="noopener" class="brand-link">Samuel Bingham</a>
+        <span class="sep">&middot;</span>
+        <span>SQL Analysis</span>
+        <span class="sep">&middot;</span>
+        <span>July 2026</span>
+      </div>
+      <p class="hero-tagline">
+        A SQL-driven analysis of 556 ranked Teamfight Tactics games from my own Set 17 climb -- pulled from Riot's API into a normalized SQLite database and queried like a PM would query product data: pose a question, run it, interpret the result, and call out when a correlation isn't actually a lever.
+      </p>
+    </header>
+
+    <section id="overview" class="section">
+      <h2 class="section-heading">Overview</h2>
+      <p>This is a companion piece to my <a href="https://samuelbingham07.github.io/TFTCaseStudy/" target="_blank" rel="noopener" class="brand-link">product teardown of TFT</a>, but the goal here is different: instead of analyzing the game as a product, I'm analyzing <strong>my own play</strong> as data. I pulled my full Set 17 ranked match history through Riot's TFT API, modeled it into a relational schema, and ran it through the same kind of question-driven SQL analysis I'd want to see from an analytics partner on a live-service team.</p>
+
+      <div class="rank-proof">
+        <img src="rank-screenshot.png" alt="ExactCylinder96#NA1 -- Set 17 LP history, 720 LP peak across 561 games" />
+        <p class="rank-caption">Set 17 -- 720 LP peak across 561 games (Challenger). Currently Grandmaster at 394 LP.</p>
+      </div>
+
+      <p><strong>1,000 games were fetched</strong> from the Riot API, of which <strong>563 were Set 17</strong> (the rest was leftover Set 16 history on the same account). Of those 563, <strong>7 were excluded</strong> as outlier games that don't reflect normal play -- see the Data Cleaning section below for exactly how and why. That leaves <strong>556 clean games</strong> behind every result on this page.</p>
+
+      <p class="aside"><strong>Why SQL, why this data:</strong> the point of this project wasn't to build the most sophisticated pipeline possible -- it's to practice real SQL (joins, window-adjacent aggregation, correlation math) against a dataset I have enough domain context to sanity-check. Every finding below got checked against "does this make sense given what I know about how the game is actually played" before it made the page. A few didn't survive that check, and where that happened, it's called out rather than smoothed over.</p>
+    </section>
+
+    <section id="methodology" class="section">
+      <h2 class="section-heading">Methodology</h2>
+
+      <h3 class="subsection-heading">Pipeline</h3>
+      <div class="code-block">src/fetch_matches.py&nbsp;&nbsp;&nbsp;Riot API <span class="hl">-&gt;</span> cached raw match JSON (data/raw/)
+src/schema.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;normalized SQLite schema + analysis views
+src/load_db.py&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;parses cached JSON <span class="hl">-&gt;</span> data/tft.db
+analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the actual analysis queries, one file per question</div>
+
+      <p>Five tables (<code>matches</code>, <code>participants</code>, <code>units</code>, <code>unit_items</code>, <code>traits</code>), plus two views: <code>set17_participants</code> scopes everything to Set 17, and <code>set17_participants_clean</code> additionally excludes the outlier games below. Augment data was part of the original plan -- it isn't present anywhere in Riot's current match-v1 response, so that analysis had to be dropped.</p>
+
+      <h3 class="subsection-heading">Data Cleaning: Excluding Non-Representative Games</h3>
+      <p>Two intentional playstyles show up in the data and would skew comp/trait performance if left in:</p>
+      <p><strong>Selling the board to hyper-roll for a 3-star 5-cost</strong>, ending in 2nd/3rd. Signature: an abnormally low final unit count -- there's a clean gap in the data, games sit at 3-4 units or jump straight to 6+, nothing in between -- combined with <code>gold_left</code> near 0 and a very late <code>last_round</code>.</p>
+      <p><strong>Conceding once 8th place was locked in.</strong> Signature: <code>gold_left &gt;= 100</code> at elimination, which occurs exactly once across all 563 games, combined with a level too low for how far the game had progressed.</p>
+
+      <blockquote class="pullquote">
+        A full 9-11 unit board running 3 copies of a 5-cost is a strong legitimate comp, not a reroll gamble. The exclusion rule needed the shrunk board <em>and</em> the concentrated 5-cost signal together -- either alone produced false positives.
+      </blockquote>
+
+      <p>Only <strong>7 of 563 games (1.2%)</strong> met both conditions and were excluded.</p>
+    </section>
+
+    <section id="findings" class="section">
+      <h2 class="section-heading">Findings</h2>
+
+      <div id="find-1" class="finding">
+        <div class="finding-header">
+          <span class="finding-number">01</span>
+          <h3 class="finding-title">Trait Performance</h3>
+        </div>
+        <p class="question-lead">Which traits am I actually winning with, and which ones am I overrating?</p>
+        <p>Average placement by active trait (<code>tier_current &gt; 0</code>), minimum 10 games played, across all 556 clean games.</p>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Trait</th><th>Games</th><th>Avg Placement</th><th>Top4%</th><th>Win%</th></tr></thead>
+            <tbody>
+              <tr class="row-flag"><td>Morgana</td><td>47</td><td class="num">3.45</td><td>70.2</td><td>17.0</td></tr>
+              <tr><td>Stargazer (Medallion)</td><td>17</td><td class="num">3.53</td><td>58.8</td><td>29.4</td></tr>
+              <tr><td>Graves</td><td>35</td><td class="num">3.66</td><td>65.7</td><td>28.6</td></tr>
+              <tr><td>Jhin</td><td>104</td><td class="num">3.67</td><td>67.3</td><td>21.2</td></tr>
+              <tr><td>Fiora</td><td>103</td><td class="num">3.81</td><td>66.0</td><td>19.4</td></tr>
+              <tr><td>Rhaast</td><td>142</td><td class="num">3.81</td><td>60.6</td><td>25.4</td></tr>
+              <tr><td>AS</td><td>100</td><td class="num">3.82</td><td>65.0</td><td>18.0</td></tr>
+              <tr><td>Shen</td><td>96</td><td class="num">3.84</td><td>64.6</td><td>19.8</td></tr>
+              <tr><td>Sona</td><td>50</td><td class="num">3.88</td><td>62.0</td><td>22.0</td></tr>
+              <tr><td>Primordian</td><td>45</td><td class="num">3.89</td><td>64.4</td><td>11.1</td></tr>
+              <tr><td>Vex</td><td>55</td><td class="num">3.93</td><td>61.8</td><td>23.6</td></tr>
+              <tr><td>Stargazer (Shield)</td><td>12</td><td class="num">4.00</td><td>66.7</td><td>0.0</td></tr>
+              <tr><td>DRX</td><td>235</td><td class="num">4.03</td><td>60.4</td><td>16.2</td></tr>
+              <tr><td>Fateweaver</td><td>92</td><td class="num">4.09</td><td>57.6</td><td>15.2</td></tr>
+              <tr><td>Blitzcrank</td><td>139</td><td class="num">4.10</td><td>59.7</td><td>18.0</td></tr>
+              <tr><td>Ranged</td><td>77</td><td class="num">4.16</td><td>57.1</td><td>15.6</td></tr>
+              <tr><td>Tahm Kench</td><td>171</td><td class="num">4.18</td><td>57.9</td><td>17.0</td></tr>
+              <tr><td>PsyOps</td><td>99</td><td class="num">4.21</td><td>56.6</td><td>16.2</td></tr>
+              <tr><td>Stargazer (Mountain)</td><td>14</td><td class="num">4.21</td><td>64.3</td><td>14.3</td></tr>
+              <tr><td>Resist</td><td>255</td><td class="num">4.22</td><td>55.7</td><td>14.9</td></tr>
+              <tr><td>Timebreaker</td><td>137</td><td class="num">4.26</td><td>53.3</td><td>16.8</td></tr>
+              <tr><td>Assassin</td><td>174</td><td class="num">4.32</td><td>54.0</td><td>14.9</td></tr>
+              <tr><td>HP Tank</td><td>296</td><td class="num">4.32</td><td>52.7</td><td>16.6</td></tr>
+              <tr><td>Stargazer (Huntress)</td><td>12</td><td class="num">4.33</td><td>50.0</td><td>16.7</td></tr>
+              <tr><td>Space Groove</td><td>237</td><td class="num">4.41</td><td>50.6</td><td>13.5</td></tr>
+              <tr><td>AP</td><td>92</td><td class="num">4.43</td><td>50.0</td><td>16.3</td></tr>
+              <tr><td>Mecha</td><td>39</td><td class="num">4.46</td><td>48.7</td><td>23.1</td></tr>
+              <tr><td>Summon</td><td>103</td><td class="num">4.46</td><td>48.5</td><td>15.5</td></tr>
+              <tr><td>Flex</td><td>212</td><td class="num">4.51</td><td>49.5</td><td>17.5</td></tr>
+              <tr><td>Shield Tank</td><td>243</td><td class="num">4.52</td><td>49.0</td><td>15.2</td></tr>
+              <tr><td>Dark Star</td><td>229</td><td class="num">4.58</td><td>48.5</td><td>14.0</td></tr>
+              <tr><td>Mana</td><td>151</td><td class="num">4.60</td><td>45.7</td><td>13.9</td></tr>
+              <tr><td>Stargazer (Wolf)</td><td>13</td><td class="num">4.62</td><td>53.8</td><td>0.0</td></tr>
+              <tr><td>Astronaut</td><td>113</td><td class="num">4.69</td><td>48.7</td><td>12.4</td></tr>
+              <tr><td>Admin</td><td>50</td><td class="num">4.76</td><td>44.0</td><td>10.0</td></tr>
+              <tr class="row-flag"><td>Miss Fortune</td><td>16</td><td class="num">5.56</td><td>18.8</td><td>6.3</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Morgana, Graves, and Jhin comps are my strongest lines by a clear margin. Miss Fortune is a sharp outlier on the underperforming end -- 5.56 avg placement and only 18.8% top-4 across 16 games, well below every other trait on the list. Worth a closer look at <em>why</em> -- itemization, positioning, or just a weak line in the current meta -- before playing it again.</p>
+      </div>
+
+      <div id="find-2" class="finding">
+        <div class="finding-header">
+          <span class="finding-number">02</span>
+          <h3 class="finding-title">Economy vs. Placement</h3>
+        </div>
+        <p class="question-lead">Does gold left at game-end predict placement?</p>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Gold Left</th><th>Games</th><th>Avg Placement</th><th>Top4%</th></tr></thead>
+            <tbody>
+              <tr><td>0</td><td>123</td><td class="num">4.91</td><td>42.3</td></tr>
+              <tr><td>1-10</td><td>305</td><td class="num">4.19</td><td>55.7</td></tr>
+              <tr><td>11-20</td><td>47</td><td class="num">4.32</td><td>55.3</td></tr>
+              <tr><td>21-30</td><td>27</td><td class="num">3.96</td><td>55.6</td></tr>
+              <tr><td>31+</td><td>54</td><td class="num">4.52</td><td>51.9</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="stat-heading">Pearson r = -0.013 (n=556)</p>
+        <p>Essentially no linear relationship. But the shape isn't flat, it's a shallow U: both hoarding gold (31+) and hitting exactly 0 correlate with worse results than the 1-30 middle range. Digging into the 0-gold bucket specifically: splitting it by game stage shows the 5 games where gold hit 0 <em>early</em> (before round 25) despite a decent level all ended in 8th place -- 100%, 0% top-4, a clean "forced all-in that failed" signal. The other 118 late-game 0-gold games are far more mixed (44.1% top-4), and notably <strong>none of my 82 wins ever end with 0 gold left</strong> -- winning games keep gold banked. So "0 gold" isn't a single pattern, it's a forced-spend signal that's sometimes a stabilizing comeback and sometimes a death spiral.</p>
+      </div>
+
+      <div id="find-3" class="finding">
+        <div class="finding-header">
+          <span class="finding-number">03</span>
+          <h3 class="finding-title">Comp Identification</h3>
+        </div>
+        <p class="question-lead">What are my most-played comps, and how do they actually stack up against each other?</p>
+        <p>Grouping games by the exact set of active traits surfaces 8 distinct comps played 8+ times.</p>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Comp (core traits)</th><th>Games</th><th>Avg Placement</th><th>Top4%</th><th>Win%</th></tr></thead>
+            <tbody>
+              <tr class="row-flag"><td>Shen / Assassin / Astronaut / Fateweaver / Timebreaker</td><td>13</td><td class="num">3.08</td><td>84.6</td><td>38.5</td></tr>
+              <tr><td>Fiora / Tahm Kench / AS / DRX / PsyOps / HP Tank</td><td>10</td><td class="num">3.30</td><td>90.0</td><td>10.0</td></tr>
+              <tr><td>Blitzcrank / Dark Star / Space Groove / Admin</td><td>8</td><td class="num">3.75</td><td>75.0</td><td>12.5</td></tr>
+              <tr><td>Rhaast / Dark Star / Space Groove / PsyOps</td><td>11</td><td class="num">4.09</td><td>54.5</td><td>18.2</td></tr>
+              <tr><td>Vex / Sona / Blitzcrank / Dark Star / Space Groove</td><td>12</td><td class="num">4.25</td><td>58.3</td><td>8.3</td></tr>
+              <tr><td>Rhaast / Astronaut / Assassin / Dark Star</td><td>12</td><td class="num">4.33</td><td>58.3</td><td>8.3</td></tr>
+              <tr><td>Rhaast / DRX / Mecha / HP Tank</td><td>12</td><td class="num">4.50</td><td>50.0</td><td>25.0</td></tr>
+              <tr class="row-flag"><td>Fiora / Tahm Kench / DRX / PsyOps / HP Tank</td><td>12</td><td class="num">4.58</td><td>58.3</td><td>0.0</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>The Shen comp is clearly my strongest line -- 3.08 avg placement, 38.5% win rate -- and worth prioritizing. The bottom comp is an interesting anomaly rather than a straightforwardly bad one: it hits top-4 more than half the time (58.3%) but has <strong>never once converted to a win</strong> in 12 games -- a "safe podium, no late-game power" profile, useful for stabilizing a rough lobby but not for closing games out.</p>
+        <p class="aside">This groups by exact trait-set match, so two games that are "the same comp" with one flex-slot trait swapped won't merge -- a simplification, not a bug.</p>
+      </div>
+
+      <div id="find-4" class="finding">
+        <div class="finding-header">
+          <span class="finding-number">04</span>
+          <h3 class="finding-title">Performance Trend Over Time</h3>
+        </div>
+        <p class="question-lead">Am I actually improving over the course of this Set 17 climb?</p>
+        <p>Weekly avg placement from Set 17 launch through early July 2026.</p>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Week (2026)</th><th>Games</th><th>Avg Placement</th><th>Top4%</th></tr></thead>
+            <tbody>
+              <tr class="row-flag"><td>15</td><td>35</td><td class="num">3.63</td><td>68.6</td></tr>
+              <tr><td>16</td><td>65</td><td class="num">4.42</td><td>49.2</td></tr>
+              <tr><td>17</td><td>63</td><td class="num">4.52</td><td>49.2</td></tr>
+              <tr><td>18-26 (avg)</td><td>386</td><td class="num">~4.4</td><td>~52</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Honest read: there's no clean "steady improvement" story here. Week 15, right after launch, was my strongest stretch by a wide margin, then results settled into a flat plateau around 4.2-4.6 for the following three months with no clear upward trend since. That's a more useful finding than a forced positive narrative -- it raises a real follow-up question (was week 15 a strong comp that later got weaker, or just small-sample variance?) rather than answering one.</p>
+      </div>
+
+      <div id="find-5" class="finding">
+        <div class="finding-header">
+          <span class="finding-number">05</span>
+          <h3 class="finding-title">Damage Output vs. Placement (and Why It's a Trap)</h3>
+        </div>
+        <p class="question-lead">Does dealing more damage to other players correlate with placement -- and if so, is that actually useful to know?</p>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Damage Bucket</th><th>Games</th><th>Avg Placement</th><th>Top4%</th></tr></thead>
+            <tbody>
+              <tr><td>&lt;50</td><td>67</td><td class="num">7.64</td><td>0.0</td></tr>
+              <tr><td>50-99</td><td>209</td><td class="num">5.99</td><td>11.5</td></tr>
+              <tr><td>100-149</td><td>169</td><td class="num">3.08</td><td>92.3</td></tr>
+              <tr><td>150-199</td><td>86</td><td class="num">1.43</td><td>100.0</td></tr>
+              <tr><td>200+</td><td>25</td><td class="num">1.12</td><td>100.0</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="stat-heading">Pearson r = -0.916 (n=556)</p>
+
+        <blockquote class="pullquote">
+          By far the strongest correlation in the whole analysis -- and the least useful one.
+        </blockquote>
+
+        <p><code>total_damage_to_players</code> accumulates every round you're still alive, so surviving longer, which <em>is</em> placement, mechanically produces more damage dealt, independent of whether the comp itself is actually strong. This is included deliberately as a contrast case: not every strong correlation is a lever you can pull. Trait choice, econ discipline, and comp selection are decisions; damage dealt is closer to a restatement of the outcome.</p>
+      </div>
+    </section>
+
+    <section id="limitations" class="section">
+      <h2 class="section-heading">Limitations</h2>
+      <ul class="limitations-list">
+        <li><strong>Single-player dataset.</strong> 563 games from one account -- findings describe my results with these comps in this meta, not general win rates.</li>
+        <li><strong>No augment data.</strong> It isn't present anywhere in the current Riot API response; the original plan included an augment-vs-placement analysis that had to be dropped.</li>
+        <li><strong>Exact-match comp grouping.</strong> Comp identification uses exact trait-set matching, not fuzzy/clustered matching, so minor flex-slot variations don't merge.</li>
+        <li><strong>Damage correlation is a methodological example</strong>, not a real finding -- included to show that a strong correlation isn't automatically an actionable one.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <p>Full pipeline, schema, and queries are in the <a href="https://github.com/samuelbingham07/TFTSet17SQLAnalysis" target="_blank" rel="noopener" class="brand-link">GitHub repo</a>. If you're interested in the other side of this project, check out my <a href="https://samuelbingham07.github.io/TFTCaseStudy/" target="_blank" rel="noopener" class="brand-link">product teardown of TFT as a live service</a>.</p>
+    </section>
+
+    <footer class="footer">
+      <p><a href="https://samuelbingham07.github.io/portfolio/" target="_blank" rel="noopener" class="footer-link">Samuel Bingham</a> &middot; July 2026</p>
+      <p style="margin-top: 6px;">Contact: <a href="mailto:samuelbingham07@gmail.com" class="footer-link">samuelbingham07@gmail.com</a></p>
+    </footer>
+
+  </main>
+
+  <script>
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navLinks.forEach(link => link.classList.remove('active'));
+          const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+  </script>
+
+</body>
+</html>
