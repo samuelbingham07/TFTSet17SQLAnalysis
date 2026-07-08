@@ -356,19 +356,15 @@ em { font-style: italic; }
   opacity: 0.75;
 }
 
-/* -- Limitations list -- */
+/* -- Perspective / disclaimer note -- */
 
-.limitations-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.limitations-list li {
-  padding-left: 18px;
-  border-left: 2px solid var(--gold-dim);
-  line-height: 1.7;
+.perspective-note {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-style: italic;
+  margin-top: 20px !important;
 }
 
 /* -- Footer -- */
