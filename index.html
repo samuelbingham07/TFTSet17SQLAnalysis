@@ -31,6 +31,8 @@
             <li><a href="#find-3" class="nav-link-sub">3. Comp Identification</a></li>
             <li><a href="#find-4" class="nav-link-sub">4. Performance Trend</a></li>
             <li><a href="#find-5" class="nav-link-sub">5. Damage Output</a></li>
+            <li><a href="#find-6" class="nav-link-sub">6. Item Performance</a></li>
+            <li><a href="#find-7" class="nav-link-sub">7. Session Length</a></li>
           </ul>
         </li>
         <li><a href="#limitations" class="nav-link">Limitations</a></li>
@@ -250,6 +252,56 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
 
         <p>I'm including this one on purpose, not because it's a real finding but because it's a useful trap to walk through. <code>total_damage_to_players</code> accumulates every round a board is still alive, so surviving longer--which is, definitionally, what placement measures--mechanically produces more damage dealt, independent of whether the comp underneath it is actually good. <strong>A correlation this strong should make you suspicious, not confident.</strong> Trait choice, econ discipline, and comp selection are decisions I can act on next game. Damage dealt is just placement, wearing a different unit.</p>
       </div>
+
+      <div id="find-6" class="finding">
+        <div class="finding-header">
+          <span class="finding-number">06</span>
+          <h3 class="finding-title">Item Performance</h3>
+        </div>
+        <p class="question-lead">Does itemization on the final board actually predict placement, and which specific items are pulling the most weight?</p>
+        <p>Total items equipped across the whole board at game-end, bucketed against placement:</p>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Items on Board</th><th>Games</th><th>Avg Placement</th></tr></thead>
+            <tbody>
+              <tr><td>&lt;10</td><td>71</td><td class="num">6.38</td></tr>
+              <tr><td>10-12</td><td>186</td><td class="num">5.13</td></tr>
+              <tr><td>13-15</td><td>192</td><td class="num">3.73</td></tr>
+              <tr><td>16-18</td><td>86</td><td class="num">2.98</td></tr>
+              <tr><td>19+</td><td>21</td><td class="num">2.67</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>This is basically Finding 5 again wearing a different unit: more items on board is really a proxy for more time alive, and more time alive is placement by definition. I'm not treating the item-count relationship as a real lever for the same reason damage wasn't one.</p>
+        <p>The per-item breakdown is more useful, minimum 15 games each. At the top: <code>Ornn Infinity Force</code> (16 games, 3.06 avg, 81.3% top-4)--a forged artifact item, small sample, but a real standout. At the bottom, something I didn't expect going in: <strong>four of my worst-performing items are emblems</strong>--Psionic (5.73 avg, 20% top-4, my single worst item), Favored (4.60), Meeple/Astronaut (4.74), and Dark Star (4.88). <strong>I don't think the emblem is what's causing the bad placement.</strong> An emblem gets slammed when a comp is already missing a natural holder of that trait--it's a patch, not a plan. The bad result more likely reflects the compromised board state that made the emblem necessary in the first place, not the item itself. Worth remembering next time I'm reaching for one under pressure.</p>
+      </div>
+
+      <div id="find-7" class="finding">
+        <div class="finding-header">
+          <span class="finding-number">07</span>
+          <h3 class="finding-title">Session Length and Tilt</h3>
+        </div>
+        <p class="question-lead">Do I actually play worse the longer a queue session runs?</p>
+        <p>I grouped games into sessions using a window function: any gap of 45+ minutes between consecutive games starts a new session (a single game runs ~35-40 minutes, and the data has a clean break there--most back-to-back games are under 45 minutes apart, then a real jump to hours). 220 sessions total, averaging 2.53 games each, longest run 15 games in one sitting.</p>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Position in Session</th><th>Games</th><th>Avg Placement</th><th>Top4%</th></tr></thead>
+            <tbody>
+              <tr><td>1st game</td><td>220</td><td class="num">4.55</td><td>49.5</td></tr>
+              <tr><td>2nd game</td><td>119</td><td class="num">4.11</td><td>56.3</td></tr>
+              <tr><td>3rd game</td><td>78</td><td class="num">4.55</td><td>46.2</td></tr>
+              <tr><td>4th-5th game</td><td>83</td><td class="num">4.52</td><td>54.2</td></tr>
+              <tr><td>6th-8th game</td><td>42</td><td class="num">4.05</td><td>59.5</td></tr>
+              <tr><td>9th+ game</td><td>14</td><td class="num">3.29</td><td>64.3</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>I went in expecting a tilt story--placement getting worse the longer I keep queuing--and the data doesn't support one. There's no downward trend at all; if anything the long tail (9th+ game, 3.29 avg) is my best bucket, though that's only 14 games and I'm not reading much into it. <strong>The one pattern that does hold up: my very first game of a session (4.55) is consistently worse than my second (4.11)</strong>, across a much larger sample (220 vs. 119 games). That reads like a warm-up effect more than a tilt effect--worth testing deliberately by tracking whether a short warm-up-style first game before "real" ranked attempts changes anything, rather than assuming the first game of the day is as sharp as the second.</p>
+      </div>
     </section>
 
     <section id="limitations" class="section">
@@ -258,7 +310,7 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
         The honest counterargument to all of this is that it's a sample size of one--556 games from a single account, in a single meta, played by someone who already knows this game well enough to bias his own reading of the results.
       </blockquote>
       <p>That's fair, and I don't think there's a clean way around it inside the scope of this project. What I can say is that the findings above are internally consistent--the trait, comp, and econ numbers all point in compatible directions rather than contradicting each other--which is weak evidence they're capturing something real about how I play, even if they say nothing about how anyone else should.</p>
-      <p>A few other honest gaps: augment data isn't in the API response I have access to, so that analysis had to be cut entirely rather than approximated. Comp identification uses exact trait-set matching, not fuzzy clustering, so minor flex-slot variations don't merge into the same row. And the damage-correlation finding above is included as a methodological example, not a real one--worth restating here so it doesn't get read as a fifth genuine insight.</p>
+      <p>A few other honest gaps: augment data isn't in the API response I have access to, so that analysis had to be cut entirely rather than approximated. Comp identification uses exact trait-set matching, not fuzzy clustering, so minor flex-slot variations don't merge into the same row. And both the damage-correlation and item-count findings above are included as methodological examples, not real ones--worth restating here so they don't get read as genuine insights alongside the rest.</p>
       <p class="perspective-note">A note on perspective: I've played this game long enough, and this account well enough, that I'm not a neutral observer of my own data. Where a result confirmed something I already believed, I tried to hold it to the same bar as the ones that surprised me. I can't promise I always succeeded.</p>
     </section>
 

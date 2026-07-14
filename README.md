@@ -110,12 +110,41 @@ Honest read: there's no clean "steady improvement" story here. Week 15 (right af
 
 Pearson r = **-0.916**, by far the strongest correlation in the whole analysis — and the least useful one. `total_damage_to_players` accumulates every round you're still alive, so surviving longer (which *is* placement) mechanically produces more damage dealt, independent of whether the comp itself is actually strong. This is included deliberately as a contrast case: not every strong correlation is a lever you can pull. Trait choice, econ discipline, and comp selection are decisions; damage dealt is closer to a restatement of the outcome.
 
+### 6. Item Performance
+
+Total items equipped across the whole final board vs. placement:
+
+| Items on Board | Games | Avg Placement |
+|---|---|---|
+| <10 | 71 | 6.38 |
+| 10-12 | 186 | 5.13 |
+| 13-15 | 192 | 3.73 |
+| 16-18 | 86 | 2.98 |
+| 19+ | 21 | 2.67 |
+
+Same trap as damage: more items on board is a proxy for more time alive, and more time alive is placement by definition — not treated as a real lever for the same reason. The per-item breakdown (min. 15 games) is more useful. Top: `Ornn Infinity Force` (16 games, 3.06 avg, 81.3% top-4) — a forged artifact item, small sample but a real standout. Bottom, and unexpected: **four of the worst-performing items are emblems** — Psionic (5.73 avg, 20% top-4, the single worst item in the dataset), Favored (4.60), Meeple/Astronaut (4.74), Dark Star (4.88). I don't think the emblem itself is causing the bad placement — an emblem gets slammed when a comp is already missing a natural holder of that trait, which is a patch, not a plan. The bad result more likely reflects the compromised board state that made the emblem necessary in the first place, not the item.
+
+### 7. Session Length and Tilt
+
+Grouped games into sessions using a window function: any gap of 45+ minutes between consecutive games starts a new session (a game runs ~35-40 min, and the gap distribution has a clean break there). 220 sessions total, averaging 2.53 games each, longest run 15 games.
+
+| Position in Session | Games | Avg Placement | Top4% |
+|---|---|---|---|
+| 1st game | 220 | 4.55 | 49.5 |
+| 2nd game | 119 | 4.11 | 56.3 |
+| 3rd game | 78 | 4.55 | 46.2 |
+| 4th-5th game | 83 | 4.52 | 54.2 |
+| 6th-8th game | 42 | 4.05 | 59.5 |
+| 9th+ game | 14 | 3.29 | 64.3 |
+
+No tilt story here — placement doesn't trend worse the longer a session runs (the long tail, 9th+ game, is actually the best bucket, though only 14 games). The pattern that does hold up: **the first game of a session (4.55 avg) is consistently worse than the second (4.11 avg)**, across a much larger sample (220 vs. 119). Reads more like a warm-up effect than a tilt effect.
+
 ## Limitations
 
 - Single-player dataset (563 games from one account) — findings describe this player's results with these comps in this meta, not general win rates.
 - Augment data unavailable in the current Riot API response; the original plan included an augment-vs-placement analysis that had to be dropped.
 - Comp identification uses exact trait-set matching, not fuzzy/clustered matching.
-- Damage correlation is included as a methodological example, not a real finding.
+- Damage and item-count correlations are included as methodological examples, not real findings.
 
 ## Reproducing
 
