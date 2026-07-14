@@ -24,11 +24,15 @@ Two intentional playstyles show up in the data and would skew comp/trait perform
 
 The exclusion logic (`set17_participants_clean`) requires the low-unit-count *and* a concentrated 5-cost signal together — a full 9-11 unit board running 3 copies of a 5-cost is just a strong legitimate comp, not a reroll gamble, and was correctly left in. **7 of 563 games (1.2%) were excluded.**
 
+## Data Quality: Traits That Weren't Traits
+
+The raw `traits` array Riot's API returns mixes real, player-facing traits with internal engine classification tags — role/stat labels used for backend logic that never show up in the trait bar. Caught by naming convention: every real trait either has a proper name (`DRX`, `Fateweaver`, `Stargazer_*`) or follows the per-champion `<Name>UniqueTrait` pattern, while eleven names instead used a bare stat/role word: `ManaTrait`, `APTrait`, `ASTrait`, `AssassinTrait`, `MeleeTrait`, `RangedTrait`, `HPTank`, `ShieldTank`, `ResistTank`, `SummonTrait`, `FlexTrait`. Confirmed against real in-game trait names and excluded via a `real_traits` view. This affected both the Trait Performance and Comp Identification queries below — the latter especially, since comp signatures had been mixing real traits with generic role tags in the same grouping.
+
 ## Findings
 
 ### 1. Trait Performance
 
-Average placement by active trait (tier_current > 0), min. 10 games played.
+Average placement by active trait (tier_current > 0), min. 10 games played, after excluding the 11 non-real trait tags above.
 
 | Trait | Games | Avg Placement | Top4% | Win% |
 |---|---|---|---|---|
@@ -44,34 +48,34 @@ Morgana, Graves, and Jhin comps are the strongest lines by a clear margin. Miss 
 
 ### 2. Economy vs. Placement
 
-Does gold left at game-end/elimination predict placement?
+Does gold left at game-end/elimination predict placement? Sub-10 gold is grouped as one bucket rather than splitting out exactly-zero — both represent the same underlying decision (capping out a board and spending down, knowing elimination might be close), so the meaningful split is low-gold vs. banked-gold, and early vs. late.
 
 | Gold Left | Games | Avg Placement | Top4% |
 |---|---|---|---|
-| 0 | 123 | 4.91 | 42.3 |
-| 1-10 | 305 | 4.19 | 55.7 |
-| 11-20 | 47 | 4.32 | 55.3 |
-| 21-30 | 27 | 3.96 | 55.6 |
-| 31+ | 54 | 4.52 | 51.9 |
+| <10 | 423 | 4.39 | 52.2 |
+| 10-19 | 45 | 4.49 | 51.1 |
+| 20-29 | 31 | 3.96 | 54.8 |
+| 30+ | 57 | 4.49 | 52.6 |
 
-Overall Pearson r = **-0.013** — essentially no linear relationship. But the shape isn't flat, it's a shallow U: both hoarding gold (31+) and hitting exactly 0 correlate with worse results than the 1-30 middle range. Digging into the 0-gold bucket specifically: splitting it by game stage shows the 5 games where gold hit 0 *early* (before round 25) despite a decent level all ended in 8th place (100%, 0% top-4) — a clean "forced all-in that failed" signal. The other 118 late-game 0-gold games are far more mixed (44.1% top-4), and notably **none of my 82 wins ever end with 0 gold left** — winning games keep gold banked. So "0 gold" isn't a single pattern, it's a forced-spend signal that's sometimes a stabilizing comeback and sometimes a death spiral.
+Overall Pearson r = **-0.013** — essentially no linear relationship, and the bucketed view is fairly flat too (everything within half a placement of everything else, aside from a 20-29 bucket that's only 31 games and could be noise). The real signal shows up when the low-gold bucket is split by game stage: the 18 times I hit under 10 gold *before* round 25, despite a reasonable level, average 7.83 placement with **zero top-4 finishes** (15 eighths, 3 sevenths) — a clean "capped out early and died anyway" pattern. The other 405 low-gold games, happening at round 25+, look completely different: 4.23 avg, 54.6% top-4 — roughly average or better. And the detail that actually surprised me: **60 of my 82 wins end with under 10 gold left** — a won board doesn't need banked economy, so of course a lot of the best games end with an empty bank. Low gold isn't good or bad on its own; early it's a death spiral, late it's often just what winning looks like.
 
 ### 3. Comp Identification
 
-Grouping games by the exact set of active traits surfaces 8 distinct comps played 8+ times:
+Grouping games by the exact set of active traits (with the 11 fake tags removed) surfaces 9 distinct comps played 8+ times:
 
 | Comp (core traits) | Games | Avg Placement | Top4% | Win% |
 |---|---|---|---|---|
-| Shen / Assassin / Astronaut / Fateweaver / Timebreaker | 13 | **3.08** | 84.6 | 38.5 |
-| Fiora / Tahm Kench / AS / DRX / PsyOps / HP Tank | 10 | 3.30 | 90.0 | 10.0 |
-| Blitzcrank / Dark Star / Space Groove / Admin | 8 | 3.75 | 75.0 | 12.5 |
-| Rhaast / Dark Star / Space Groove / PsyOps | 11 | 4.09 | 54.5 | 18.2 |
-| Vex / Sona / Blitzcrank / Dark Star / Space Groove | 12 | 4.25 | 58.3 | 8.3 |
-| Rhaast / Astronaut / Assassin / Dark Star | 12 | 4.33 | 58.3 | 8.3 |
-| Rhaast / DRX / Mecha / HP Tank | 12 | 4.50 | 50.0 | 25.0 |
-| Fiora / Tahm Kench / DRX / PsyOps / HP Tank | 12 | 4.58 | 58.3 | **0.0** |
+| Astronaut / Fateweaver / Shen / Timebreaker | 14 | **3.07** | 85.7 | 35.7 |
+| Admin / Blitzcrank / Dark Star / Space Groove | 10 | 3.70 | 80.0 | 10.0 |
+| DRX / Fiora / Psionic / Tahm Kench | 22 | 4.00 | 72.7 | 4.5 |
+| Dark Star / Psionic / Rhaast / Space Groove | 11 | 4.09 | 54.5 | 18.2 |
+| Astronaut / Dark Star / Rhaast / Space Groove | 13 | 4.23 | 61.5 | 7.7 |
+| Blitzcrank / Dark Star / Sona / Space Groove / Vex | 12 | 4.25 | 58.3 | 8.3 |
+| DRX / Mecha / Rhaast | 12 | 4.50 | 50.0 | 25.0 |
+| DRX / Fateweaver / Stargazer Medallion / Timebreaker | 8 | 5.00 | 25.0 | 12.5 |
+| Astronaut / Fateweaver / Timebreaker | 11 | **5.91** | 9.1 | **0.0** |
 
-The Shen comp is clearly the strongest line (3.08 avg, 38.5% win rate) and worth prioritizing. The bottom comp is an interesting anomaly rather than a straightforwardly bad one: it hits top-4 more than half the time (58.3%) but has **never once converted to a win** in 12 games — a "safe podium, no late-game power" profile, useful for stabilizing a rough lobby but not for closing games out.
+The best line is Astronaut/Fateweaver/Shen/Timebreaker (3.07 avg, 85.7% top-4, 35.7% win). The standout finding is the bottom row: **the exact same core minus Shen** — Astronaut/Fateweaver/Timebreaker — sits dead last at 5.91 avg, 9.1% top-4, zero wins in 11 games. One trait is the entire gap between my best comp and my worst; I hadn't clocked how load-bearing Shen was until removing the fake trait tags forced the two variants apart into separate rows instead of blending together. Separately, DRX/Fiora/Psionic/Tahm Kench is my most-played comp on this list (22 games) and hits top-4 72.7% of the time, but converts to a win only 4.5% of the time — a comp with a ceiling, good for stabilizing a rough lobby but not for closing games out.
 
 *Caveat: this groups by exact trait-set match, so two games that are "the same comp" with one flex-slot trait swapped won't merge — a simplification, not a bug.*
 

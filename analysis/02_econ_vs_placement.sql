@@ -2,11 +2,10 @@
 -- Part 1: bucketed view (easy to read/chart)
 SELECT
     CASE
-        WHEN gold_left = 0 THEN '0'
-        WHEN gold_left BETWEEN 1 AND 10 THEN '1-10'
-        WHEN gold_left BETWEEN 11 AND 20 THEN '11-20'
-        WHEN gold_left BETWEEN 21 AND 30 THEN '21-30'
-        ELSE '31+'
+        WHEN gold_left < 10 THEN '<10'
+        WHEN gold_left BETWEEN 10 AND 19 THEN '10-19'
+        WHEN gold_left BETWEEN 20 AND 29 THEN '20-29'
+        ELSE '30+'
     END AS gold_left_bucket,
     COUNT(*)                    AS games,
     ROUND(AVG(placement), 2)    AS avg_placement,

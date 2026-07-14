@@ -8,7 +8,7 @@ SELECT
     ROUND(100.0 * SUM(CASE WHEN p.placement <= 4 THEN 1 ELSE 0 END) / COUNT(*), 1) AS top4_rate,
     ROUND(100.0 * SUM(CASE WHEN p.placement = 1 THEN 1 ELSE 0 END) / COUNT(*), 1)  AS win_rate
 FROM set17_participants_clean p
-JOIN traits t ON t.participant_id = p.participant_id
+JOIN real_traits t ON t.participant_id = p.participant_id
 WHERE p.puuid = (SELECT puuid FROM me)
   AND t.tier_current > 0
 GROUP BY t.name

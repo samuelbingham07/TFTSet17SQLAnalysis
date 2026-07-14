@@ -6,7 +6,7 @@ WITH comp_signature AS (
         p.placement,
         GROUP_CONCAT(t.name, '+' ORDER BY t.name) AS comp
     FROM set17_participants_clean p
-    JOIN traits t ON t.participant_id = p.participant_id AND t.tier_current > 0
+    JOIN real_traits t ON t.participant_id = p.participant_id AND t.tier_current > 0
     WHERE p.puuid = (SELECT puuid FROM me)
     GROUP BY p.participant_id
 )

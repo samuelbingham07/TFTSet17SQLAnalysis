@@ -54,6 +54,29 @@ CREATE TABLE IF NOT EXISTS me (
     puuid TEXT PRIMARY KEY
 );
 
+-- Riot's traits array mixes real, player-facing traits with internal engine
+-- classification tags (role/stat labels used for backend logic, never shown
+-- in the trait bar). Identified by naming convention: every real trait has
+-- either a proper name (DRX, Fateweaver, Stargazer_*) or the per-champion
+-- <Name>UniqueTrait pattern; these instead are bare stat/role words, and
+-- were confirmed as not real by checking against actual in-game trait names.
+CREATE TABLE IF NOT EXISTS excluded_trait_tags (name TEXT PRIMARY KEY);
+INSERT OR IGNORE INTO excluded_trait_tags (name) VALUES
+    ('TFT17_ManaTrait'),
+    ('TFT17_APTrait'),
+    ('TFT17_ASTrait'),
+    ('TFT17_AssassinTrait'),
+    ('TFT17_MeleeTrait'),
+    ('TFT17_RangedTrait'),
+    ('TFT17_HPTank'),
+    ('TFT17_ShieldTank'),
+    ('TFT17_ResistTank'),
+    ('TFT17_SummonTrait'),
+    ('TFT17_FlexTrait');
+
+CREATE VIEW IF NOT EXISTS real_traits AS
+    SELECT * FROM traits WHERE name NOT IN (SELECT name FROM excluded_trait_tags);
+
 -- Analysis is scoped to Set 17; these views keep that filter out of every query.
 CREATE VIEW IF NOT EXISTS set17_matches AS
     SELECT * FROM matches WHERE set_number = 17;

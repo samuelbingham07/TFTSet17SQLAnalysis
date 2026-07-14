@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TFT Set 17, By The Numbers -- Samuel Bingham</title>
+  <title>TFT Set 17, My SQL Analysis -- Samuel Bingham</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -50,13 +50,13 @@
         <span>July 2026</span>
       </div>
       <p class="hero-tagline">
-        A SQL analysis of my own Set 17 ranked match history--556 games, pulled from Riot's API into a relational database and interrogated the way I'd want a PM to interrogate product data: pose a hypothesis, run the query, and be honest about what the number actually supports.
+        A SQL analysis of my own Set 17 ranked match history--556 games, pulled from Riot's API into a relational database and interrogated the way I'd want a PM to interrogate product data. I pose a hypothesis, run the query, and analyze what the number actually supports.
       </p>
     </header>
 
     <section id="overview" class="section">
       <h2 class="section-heading">Project Overview</h2>
-      <p>I think the natural extension of the <a href="https://samuelbingham07.github.io/TFTCaseStudy/" target="_blank" rel="noopener" class="brand-link">product teardown</a> I wrote on TFT is to turn the same scrutiny on my own play. If I'm going to argue that Riot should build post-game analysis tooling for mid-ranked players, I should be willing to run that kind of analysis on myself first--with real data, not just informed feel.</p>
+      <p>I think the natural extension of the <a href="https://samuelbingham07.github.io/TFTCaseStudy/" target="_blank" rel="noopener" class="brand-link">product teardown</a> I wrote on TFT is to turn the same scrutiny on my own play. If I'm going to argue that Riot should build post-game analysis tooling for mid-ranked players, I should be willing to run that kind of analysis on myself first, and with real data.</p>
 
       <p>This project pulls my full Set 17 ranked match history through Riot's TFT API, models it into a relational schema, and asks it the same kind of questions I'd ask of any product dataset. <strong>Pose a hypothesis, run the query, and be honest about what the result actually supports--including the times it didn't support what I expected going in.</strong></p>
 
@@ -65,14 +65,14 @@
         <p class="rank-caption">Set 17 -- 720 LP peak across 561 games. Grandmaster (394 LP) as of this writing.</p>
       </div>
 
-      <p>I fetched 1,000 games total from the API, though only 563 of those turned out to be Set 17--the rest was leftover history from Set 16 sitting on the same account. Of the 563, I ended up excluding 7 as outlier games that don't reflect how I actually play; more on how and why in the next section. That left <strong>556 games</strong> behind every number on this page.</p>
+      <p>I fetched 563 final boards from the API. Of the 563, I ended up excluding 7 as outlier games whose final boards don't reflect the games themselves at all. more on how and why in the next section. That left <strong>556 games</strong> behind every number on this page.</p>
 
-      <p class="aside"><strong>Why this, and why SQL:</strong> the point was never to build the most sophisticated pipeline I could. It was to practice real SQL--joins, aggregation, a hand-rolled correlation coefficient--against a dataset I actually have the context to sanity-check. A few of the findings below didn't survive that sanity check on the first pass. I've left that process visible below rather than smoothing it over.</p>
+      <p class="aside"><strong>Why this, and why SQL:</strong> the point was never to build the most sophisticated pipeline I could. It was to practice real SQL (joins, aggregation, a hand-rolled correlation coefficient) against a dataset I actually have the context to sanity-check. A few of the findings below didn't survive that sanity check on the first pass, and I've left those visible.</p>
     </section>
 
     <section id="methodology" class="section">
       <h2 class="section-heading">Building the Dataset</h2>
-      <p>Getting from raw match history to something queryable took four small scripts and one decision I didn't expect to have to make going in: how to define a game that shouldn't count.</p>
+      <p>Getting from raw match history to something queryable took four small scripts and the question how to define a game that is not representative of my play and should be omitted.</p>
 
       <h3 class="subsection-heading">The Pipeline</h3>
       <p>Four pieces do the actual work:</p>
@@ -81,20 +81,19 @@ src/schema.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;normalized S
 src/load_db.py&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;parses cached JSON <span class="hl">-&gt;</span> data/tft.db
 analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the actual analysis queries, one file per question</div>
 
-      <p>Five tables hold the data--<code>matches</code>, <code>participants</code>, <code>units</code>, <code>unit_items</code>, and <code>traits</code>--plus two views that do the scoping so I'm not repeating the same <code>WHERE</code> clause in every query. <code>set17_participants</code> filters everything down to Set 17; <code>set17_participants_clean</code> additionally strips the outlier games below. Augments were part of the original plan and had to be cut entirely--they simply aren't present anywhere in Riot's current match-v1 response, which was itself a small finding I didn't go looking for.</p>
+      <p>Five tables hold the data--<code>matches</code>, <code>participants</code>, <code>units</code>, <code>unit_items</code>, and <code>traits</code>--plus two views that do the scoping so I'm not repeating the same <code>WHERE</code> clause in every query. <code>set17_participants</code> filters everything down to Set 17; <code>set17_participants_clean</code> additionally strips the outlier games below. Augments were part of the original plan and had to be cut entirely because they unfortunately aren't present anywhere in Riot's current match-v1 response (for good reason, since I think augment stats abuse does ruin player freedom and decision-making).</p>
 
       <h3 class="subsection-heading">The Games That Almost Slipped Through</h3>
       <p>Two of my own habits show up in this data clearly enough that, left in, they would have quietly skewed every trait and comp number on this page.</p>
 
-      <p>The first is <strong>selling my board to hyper-roll for a three-star five-cost</strong>, something I do occasionally when a lobby is already lost and I'd rather gamble for a strong finish than accept a guaranteed bad one. It leaves a distinct signature: an abnormally low final unit count--there's a real gap in the data, games sit at three or four units or jump straight to six or more, nothing in between--paired with <code>gold_left</code> near zero and a very late <code>last_round</code>.</p>
+      <p>The first is <strong>selling my board to hyper-roll for a three-star five-cost</strong>, something that occasionally becomes the optimal play when a lobby is already lost unless I gamble for a strong finish than accept a guaranteed 3rd or 2nd. In these games, there's a real gap in the data, final boards are comprised of just 5 costs with no syngeries (since all other units were sold of for rerolling), and paired with <code>gold_left</code> near zero and a very late <code>last_round</code>.</p>
 
-      <p>The second is <strong>conceding once eighth place is already locked in</strong>. That one turned out to be rarer than I expected, and showed up as exactly one game: 147 gold left at round 20, with a level too low for how far the game had progressed to be anything but someone who'd stopped trying.</p>
-
-      <blockquote class="pullquote">
-        I found this out the hard way: a full 9-11 unit board running three copies of a five-cost is just a strong, legitimate comp, not a reroll gamble. The exclusion rule needed the shrunk board <em>and</em> the concentrated five-cost signal together--either one alone produced false positives.
-      </blockquote>
+      <p>The second is <strong>leaving the game (like a ragequit) once eighth place is already locked in</strong>. That one turned out to be rarer than I expected, and showed up as exactly one game: 147 gold left at round 20, with a level too low for how far the game had progressed to be anything but someone who'd stopped trying.</p>
 
       <p>In the end, only <strong>7 of 563 games</strong>--about 1 in 80--met both conditions and were cut.</p>
+
+      <h3 class="subsection-heading">The Traits That Weren't Traits</h3>
+      <p>A sharper-eyed reader than me caught this one: a handful of names sitting in the trait table--<code>Mana</code>, <code>Stargazer (Wolf)</code> among them--weren't traits I'd ever actually pick or see highlighted in my own trait bar. I went back into the raw data to check, and found eleven names (<code>Mana</code>, <code>AP</code>, <code>AS</code>, <code>Assassin</code>, <code>Melee</code>, <code>Ranged</code>, <code>HP Tank</code>, <code>Shield Tank</code>, <code>Resist</code>, <code>Summon</code>, <code>Flex</code>) that all share the same tell: a bare stat or role word instead of a real name, unlike every genuine trait in the set. <strong>Those are internal engine classification tags, not synergies I ever chose</strong>, and they were quietly riding along in the same API field as the real ones. I've excluded all eleven from both the trait performance and comp identification queries below--Finding 3 in particular reads differently now that comp signatures aren't padded with generic role tags alongside real traits.</p>
     </section>
 
     <section id="findings" class="section">
@@ -103,9 +102,9 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
       <div id="find-1" class="finding">
         <div class="finding-header">
           <span class="finding-number">01</span>
-          <h3 class="finding-title">Trait Performance</h3>
+          <h3 class="finding-title">Trait/Unit Performance</h3>
         </div>
-        <p class="question-lead">Which traits am I actually winning with, and which ones am I overrating?</p>
+        <p class="question-lead">Which traits (and consequently, some units that come with special traits like Morgana and Rhaast) am I actually winning with, and which ones am I overrating?</p>
         <p>Average placement by active trait (<code>tier_current &gt; 0</code>), minimum 10 games played, across all 556 clean games.</p>
 
         <div class="table-wrap">
@@ -118,7 +117,6 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
               <tr><td>Jhin</td><td>104</td><td class="num">3.67</td><td>67.3</td><td>21.2</td></tr>
               <tr><td>Fiora</td><td>103</td><td class="num">3.81</td><td>66.0</td><td>19.4</td></tr>
               <tr><td>Rhaast</td><td>142</td><td class="num">3.81</td><td>60.6</td><td>25.4</td></tr>
-              <tr><td>AS</td><td>100</td><td class="num">3.82</td><td>65.0</td><td>18.0</td></tr>
               <tr><td>Shen</td><td>96</td><td class="num">3.84</td><td>64.6</td><td>19.8</td></tr>
               <tr><td>Sona</td><td>50</td><td class="num">3.88</td><td>62.0</td><td>22.0</td></tr>
               <tr><td>Primordian</td><td>45</td><td class="num">3.89</td><td>64.4</td><td>11.1</td></tr>
@@ -127,23 +125,14 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
               <tr><td>DRX</td><td>235</td><td class="num">4.03</td><td>60.4</td><td>16.2</td></tr>
               <tr><td>Fateweaver</td><td>92</td><td class="num">4.09</td><td>57.6</td><td>15.2</td></tr>
               <tr><td>Blitzcrank</td><td>139</td><td class="num">4.10</td><td>59.7</td><td>18.0</td></tr>
-              <tr><td>Ranged</td><td>77</td><td class="num">4.16</td><td>57.1</td><td>15.6</td></tr>
               <tr><td>Tahm Kench</td><td>171</td><td class="num">4.18</td><td>57.9</td><td>17.0</td></tr>
-              <tr><td>PsyOps</td><td>99</td><td class="num">4.21</td><td>56.6</td><td>16.2</td></tr>
+              <tr><td>Psionic</td><td>99</td><td class="num">4.21</td><td>56.6</td><td>16.2</td></tr>
               <tr><td>Stargazer (Mountain)</td><td>14</td><td class="num">4.21</td><td>64.3</td><td>14.3</td></tr>
-              <tr><td>Resist</td><td>255</td><td class="num">4.22</td><td>55.7</td><td>14.9</td></tr>
               <tr><td>Timebreaker</td><td>137</td><td class="num">4.26</td><td>53.3</td><td>16.8</td></tr>
-              <tr><td>Assassin</td><td>174</td><td class="num">4.32</td><td>54.0</td><td>14.9</td></tr>
-              <tr><td>HP Tank</td><td>296</td><td class="num">4.32</td><td>52.7</td><td>16.6</td></tr>
               <tr><td>Stargazer (Huntress)</td><td>12</td><td class="num">4.33</td><td>50.0</td><td>16.7</td></tr>
               <tr><td>Space Groove</td><td>237</td><td class="num">4.41</td><td>50.6</td><td>13.5</td></tr>
-              <tr><td>AP</td><td>92</td><td class="num">4.43</td><td>50.0</td><td>16.3</td></tr>
               <tr><td>Mecha</td><td>39</td><td class="num">4.46</td><td>48.7</td><td>23.1</td></tr>
-              <tr><td>Summon</td><td>103</td><td class="num">4.46</td><td>48.5</td><td>15.5</td></tr>
-              <tr><td>Flex</td><td>212</td><td class="num">4.51</td><td>49.5</td><td>17.5</td></tr>
-              <tr><td>Shield Tank</td><td>243</td><td class="num">4.52</td><td>49.0</td><td>15.2</td></tr>
               <tr><td>Dark Star</td><td>229</td><td class="num">4.58</td><td>48.5</td><td>14.0</td></tr>
-              <tr><td>Mana</td><td>151</td><td class="num">4.60</td><td>45.7</td><td>13.9</td></tr>
               <tr><td>Stargazer (Wolf)</td><td>13</td><td class="num">4.62</td><td>53.8</td><td>0.0</td></tr>
               <tr><td>Astronaut</td><td>113</td><td class="num">4.69</td><td>48.7</td><td>12.4</td></tr>
               <tr><td>Admin</td><td>50</td><td class="num">4.76</td><td>44.0</td><td>10.0</td></tr>
@@ -152,7 +141,8 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
           </table>
         </div>
 
-        <p>Morgana, Graves, and Jhin are, by a clear margin, my three strongest lines--all sitting comfortably under a 3.7 average placement with top-four rates north of 65%. What actually caught my attention wasn't the top of this list, though, it was the bottom. Miss Fortune sits alone at 5.56 average placement and an 18.8% top-four rate across sixteen games--nothing else on the list is close. Sixteen games is enough that I don't think it's noise, but it isn't enough on its own to tell me why. <strong>My best guess is itemization or positioning rather than the trait itself, and that's a hypothesis, not a finding--exactly the kind of question a replay review tool would actually help me answer.</strong></p>
+        <p>Morgana, Graves, and Jhin are, by a clear margin, my three strongest lines--all sitting comfortably under a 3.7 average placement with top-four rates north of 65%. Miss Fortune sits alone at 5.56 average placement and an 18.8% top-four rate across sixteen games--nothing else on the list is close. Sixteen games is enough that I don't think it's noise, but it isn't enough on its own to tell me why. <strong>My best guess is itemization or positioning rather than the trait itself, and that's a hypothesis, not a finding--exactly the kind of question a replay review tool would actually help me answer.</strong></p>
+        <p class="aside">This table excludes eleven internal engine tags (Mana, AP, AS, Assassin, Melee, Ranged, HP Tank, Shield Tank, Resist, Summon, Flex) that showed up in the raw API data but aren't real traits--see <a href="#methodology" class="brand-link">Building the Dataset</a> for how I caught that.</p>
       </div>
 
       <div id="find-2" class="finding">
@@ -161,22 +151,22 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
           <h3 class="finding-title">Economy vs. Placement</h3>
         </div>
         <p class="question-lead">Does gold left at game-end actually predict placement?</p>
+        <p>I'm grouping sub-10 gold as one bucket here rather than splitting out exactly-zero, because both represent the same underlying decision: capping out a board and spending down, knowing elimination might be close. What actually matters isn't 0 versus 7 gold--it's low gold versus a lot of banked gold, and whether that low-gold state shows up early or late.</p>
 
         <div class="table-wrap">
           <table class="data-table">
             <thead><tr><th>Gold Left</th><th>Games</th><th>Avg Placement</th><th>Top4%</th></tr></thead>
             <tbody>
-              <tr><td>0</td><td>123</td><td class="num">4.91</td><td>42.3</td></tr>
-              <tr><td>1-10</td><td>305</td><td class="num">4.19</td><td>55.7</td></tr>
-              <tr><td>11-20</td><td>47</td><td class="num">4.32</td><td>55.3</td></tr>
-              <tr><td>21-30</td><td>27</td><td class="num">3.96</td><td>55.6</td></tr>
-              <tr><td>31+</td><td>54</td><td class="num">4.52</td><td>51.9</td></tr>
+              <tr><td>&lt;10</td><td>423</td><td class="num">4.39</td><td>52.2</td></tr>
+              <tr><td>10-19</td><td>45</td><td class="num">4.49</td><td>51.1</td></tr>
+              <tr><td>20-29</td><td>31</td><td class="num">3.94</td><td>54.8</td></tr>
+              <tr><td>30+</td><td>57</td><td class="num">4.49</td><td>52.6</td></tr>
             </tbody>
           </table>
         </div>
         <p class="stat-heading">Pearson r = -0.013 (n=556)</p>
-        <p>On its own, that number says almost nothing--essentially zero linear relationship. But the shape underneath it isn't flat, it's a shallow U, and that shape is more informative than the single coefficient that's supposed to summarize it. Both hoarding gold (31+) and burning all the way down to zero correlate with worse results than sitting in the 1-30 middle range. <strong>The correlation coefficient alone would have told me to stop looking.</strong></p>
-        <p>The zero-gold bucket turned out to be two different games wearing the same number. Splitting it by how far the game had progressed, the five times I hit zero gold before round 25--despite a perfectly reasonable level--all ended in eighth place. Zero top-four finishes, no exceptions. That's about as clean a "forced all-in that failed" signal as this dataset produces. The other 118 zero-gold games, the ones that happened later, are far more mixed at 44.1% top-four. And the detail I didn't expect going in: <strong>none of my 82 wins ever end with zero gold left</strong>--winning games keep money in the bank. Zero gold isn't one pattern, it's a forced-spend signal, and whether it reads as a comeback or a death spiral depends entirely on when it happens.</p>
+        <p>That's essentially zero linear relationship, and once <10 is grouped as one bucket, the bucketed view is honestly pretty flat too--everything sits within half a placement of everything else, except a modestly better 20-29 bucket that's only 31 games and could easily be noise. <strong>Gold left at game-end, on its own, tells me almost nothing.</strong></p>
+        <p>Splitting the low-gold bucket by how far the game had progressed is where the real signal shows up. The 18 times I hit under 10 gold before round 25--despite a perfectly reasonable level--produced an average placement of 7.83 with zero top-four finishes: fifteen eighths, three sevenths. That's a clean "capped out early and died anyway" pattern. The other 405 low-gold games, the ones that happened at round 25 or later, look completely different: 4.23 average placement, 54.6% top-four--basically average or slightly better. And the detail that actually surprised me: <strong>60 of my 82 wins end with under 10 gold left</strong>. Once I checked, that stopped being surprising--a board that's already won doesn't need banked economy, so of course a lot of my best games end with an empty bank. Low gold isn't good or bad on its own. Early, it's a death spiral. Late, it's often just what winning looks like.</p>
       </div>
 
       <div id="find-3" class="finding">
@@ -185,26 +175,27 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
           <h3 class="finding-title">Comp Identification</h3>
         </div>
         <p class="question-lead">What are my most-played comps, and how do they actually compare to each other?</p>
-        <p>Grouping games by the exact set of active traits surfaces 8 distinct comps played 8 or more times.</p>
+        <p>Grouping games by the exact set of active traits--now that the eleven fake ones are out of the signature--surfaces 9 distinct comps played 8 or more times.</p>
 
         <div class="table-wrap">
           <table class="data-table">
             <thead><tr><th>Comp (core traits)</th><th>Games</th><th>Avg Placement</th><th>Top4%</th><th>Win%</th></tr></thead>
             <tbody>
-              <tr class="row-flag"><td>Shen / Assassin / Astronaut / Fateweaver / Timebreaker</td><td>13</td><td class="num">3.08</td><td>84.6</td><td>38.5</td></tr>
-              <tr><td>Fiora / Tahm Kench / AS / DRX / PsyOps / HP Tank</td><td>10</td><td class="num">3.30</td><td>90.0</td><td>10.0</td></tr>
-              <tr><td>Blitzcrank / Dark Star / Space Groove / Admin</td><td>8</td><td class="num">3.75</td><td>75.0</td><td>12.5</td></tr>
-              <tr><td>Rhaast / Dark Star / Space Groove / PsyOps</td><td>11</td><td class="num">4.09</td><td>54.5</td><td>18.2</td></tr>
-              <tr><td>Vex / Sona / Blitzcrank / Dark Star / Space Groove</td><td>12</td><td class="num">4.25</td><td>58.3</td><td>8.3</td></tr>
-              <tr><td>Rhaast / Astronaut / Assassin / Dark Star</td><td>12</td><td class="num">4.33</td><td>58.3</td><td>8.3</td></tr>
-              <tr><td>Rhaast / DRX / Mecha / HP Tank</td><td>12</td><td class="num">4.50</td><td>50.0</td><td>25.0</td></tr>
-              <tr class="row-flag"><td>Fiora / Tahm Kench / DRX / PsyOps / HP Tank</td><td>12</td><td class="num">4.58</td><td>58.3</td><td>0.0</td></tr>
+              <tr class="row-flag"><td>Astronaut / Fateweaver / Shen / Timebreaker</td><td>14</td><td class="num">3.07</td><td>85.7</td><td>35.7</td></tr>
+              <tr><td>Admin / Blitzcrank / Dark Star / Space Groove</td><td>10</td><td class="num">3.70</td><td>80.0</td><td>10.0</td></tr>
+              <tr><td>DRX / Fiora / Psionic / Tahm Kench</td><td>22</td><td class="num">4.00</td><td>72.7</td><td>4.5</td></tr>
+              <tr><td>Dark Star / Psionic / Rhaast / Space Groove</td><td>11</td><td class="num">4.09</td><td>54.5</td><td>18.2</td></tr>
+              <tr><td>Astronaut / Dark Star / Rhaast / Space Groove</td><td>13</td><td class="num">4.23</td><td>61.5</td><td>7.7</td></tr>
+              <tr><td>Blitzcrank / Dark Star / Sona / Space Groove / Vex</td><td>12</td><td class="num">4.25</td><td>58.3</td><td>8.3</td></tr>
+              <tr><td>DRX / Mecha / Rhaast</td><td>12</td><td class="num">4.50</td><td>50.0</td><td>25.0</td></tr>
+              <tr><td>DRX / Fateweaver / Stargazer (Medallion) / Timebreaker</td><td>8</td><td class="num">5.00</td><td>25.0</td><td>12.5</td></tr>
+              <tr class="row-flag"><td>Astronaut / Fateweaver / Timebreaker</td><td>11</td><td class="num">5.91</td><td>9.1</td><td>0.0</td></tr>
             </tbody>
           </table>
         </div>
 
-        <p>The Shen comp--Assassin, Astronaut, Fateweaver, Timebreaker--is clearly my best line by every measure that matters: 3.08 average placement, 84.6% top-four, and a 38.5% win rate across thirteen games. That's the one I should be prioritizing, and mostly haven't been.</p>
-        <p>The more interesting result is at the bottom, and it isn't simply "worst comp." The Fiora/Tahm Kench/DRX/PsyOps/HP Tank line hits top-four more than half the time (58.3%) across twelve games, but <strong>has never once converted to a win</strong>. That's not a weak comp, it's a comp with a ceiling--good for stabilizing a lobby that's already going sideways, bad if the plan is to actually close a game out.</p>
+        <p>The Astronaut/Fateweaver/Shen/Timebreaker comp is clearly my best line: 3.07 average placement, 85.7% top-four, 35.7% win rate across fourteen games. That part isn't surprising. What is surprising is the bottom row: <strong>Astronaut/Fateweaver/Timebreaker--the exact same core, minus Shen--sits dead last</strong> at 5.91 average placement, 9.1% top-four, and zero wins in eleven games. One trait is the entire difference between my best comp and my worst. I hadn't clocked how load-bearing Shen was in that lineup until the data forced the two apart into separate rows.</p>
+        <p>The other result worth flagging: DRX/Fiora/Psionic/Tahm Kench hits top-four nearly three-quarters of the time (72.7%) across twenty-two games--my most-played comp on this list--but converts to a win only 4.5% of the time. That's not a weak comp, it's a comp with a ceiling: reliable enough to stabilize a lobby that's already going sideways, not built to actually close a game out.</p>
         <p class="aside">This groups by exact trait-set match, so two games that are functionally the same comp with one flex-slot trait swapped won't merge here. A simplification I made on purpose, not something I missed.</p>
       </div>
 
