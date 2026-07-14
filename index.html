@@ -93,7 +93,9 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
       <p>In the end, only <strong>7 of 563 games</strong>--about 1 in 80--met both conditions and were cut.</p>
 
       <h3 class="subsection-heading">The Traits That Weren't Traits</h3>
-      <p>A sharper-eyed reader than me caught this one: a handful of names sitting in the trait table--<code>Mana</code>, <code>Stargazer (Wolf)</code> among them--weren't traits I'd ever actually pick or see highlighted in my own trait bar. I went back into the raw data to check, and found eleven names (<code>Mana</code>, <code>AP</code>, <code>AS</code>, <code>Assassin</code>, <code>Melee</code>, <code>Ranged</code>, <code>HP Tank</code>, <code>Shield Tank</code>, <code>Resist</code>, <code>Summon</code>, <code>Flex</code>) that all share the same tell: a bare stat or role word instead of a real name, unlike every genuine trait in the set. <strong>Those are internal engine classification tags, not synergies I ever chose</strong>, and they were quietly riding along in the same API field as the real ones. I've excluded all eleven from both the trait performance and comp identification queries below--Finding 3 in particular reads differently now that comp signatures aren't padded with generic role tags alongside real traits.</p>
+      <p>A sharper-eyed reader than me caught this one: a handful of names sitting in the trait table--<code>Mana</code>, <code>Stargazer (Wolf)</code> among them--weren't traits I'd ever actually pick or see highlighted in my own trait bar. I went back into the raw data to check, and found eleven names (<code>Mana</code>, <code>AP</code>, <code>AS</code>, <code>Assassin</code>, <code>Melee</code>, <code>Ranged</code>, <code>HP Tank</code>, <code>Shield Tank</code>, <code>Resist</code>, <code>Summon</code>, <code>Flex</code>) that all share the same tell: a bare stat or role word instead of a real name, unlike every genuine trait in the set. <strong>Those are internal engine classification tags, not synergies I ever chose</strong>, and they were quietly riding along in the same API field as the real ones. I've excluded all eleven from both the trait performance and comp identification queries below.</p>
+
+      <p>A second pass, prompted by more names not ringing a bell (<code>DRX</code>, <code>Admin</code>, <code>Stargazer (Wolf)</code> again), turned up something bigger: Riot's raw API identifiers often just don't match the real in-game display names at all. I cross-referenced against external trait databases (tactics.tools, blitz.gg) and found two separate problems. First, most of my "champion name" traits were wrong labels on my part--the API calls Morgana's trait <code>MorganaUniqueTrait</code>, but it displays in-game as <strong>Dark Lady</strong>. Same story for Jhin (<strong>Eradicator</strong>), Fiora (<strong>Divine Duelist</strong>), Rhaast (<strong>Redeemer</strong>), Shen (<strong>Bulwark</strong>), Sona (<strong>Commander</strong>), Vex (<strong>Doomer</strong>), Blitzcrank (<strong>Party Animal</strong>), Tahm Kench (<strong>Oracle</strong>), Graves (<strong>Factory New</strong>), Miss Fortune (<strong>Gun Goddess</strong>), and Astronaut, which turned out to not be a champion reference at all--the real trait is called <strong>Meeple</strong>. <code>Admin</code> is real too, just under the name <strong>Arbiter</strong>. Second, <code>DRX</code> and <code>Stargazer (Wolf)</code>/<code>Stargazer (Shield)</code> genuinely don't exist in Set 17--confirmed absent across three independent sources. The real Stargazer constellation set is Serpent, Huntress, Mountain, Altar, Medallion, Fountain, and Boar; Wolf and Shield were never among them. Those three are now excluded the same way as the eleven engine tags; everything else below uses the corrected real names.</p>
     </section>
 
     <section id="findings" class="section">
@@ -104,28 +106,26 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
           <span class="finding-number">01</span>
           <h3 class="finding-title">Trait/Unit Performance</h3>
         </div>
-        <p class="question-lead">Which traits (and consequently, some units that come with special traits like Morgana and Rhaast) am I actually winning with, and which ones am I overrating?</p>
-        <p>Average placement by active trait (<code>tier_current &gt; 0</code>), minimum 10 games played, across all 556 clean games.</p>
+        <p class="question-lead">Which traits (and consequently, some units that come with special traits like Dark Lady's Morgana and Redeemer's Rhaast) am I actually winning with, and which ones am I overrating?</p>
+        <p>Average placement by active trait (<code>tier_current &gt; 0</code>), minimum 10 games played, across all 556 clean games. Champion-linked traits are shown with the champion in parentheses for reference.</p>
 
         <div class="table-wrap">
           <table class="data-table">
             <thead><tr><th>Trait</th><th>Games</th><th>Avg Placement</th><th>Top4%</th><th>Win%</th></tr></thead>
             <tbody>
-              <tr class="row-flag"><td>Morgana</td><td>47</td><td class="num">3.45</td><td>70.2</td><td>17.0</td></tr>
+              <tr class="row-flag"><td>Dark Lady (Morgana)</td><td>47</td><td class="num">3.45</td><td>70.2</td><td>17.0</td></tr>
               <tr><td>Stargazer (Medallion)</td><td>17</td><td class="num">3.53</td><td>58.8</td><td>29.4</td></tr>
-              <tr><td>Graves</td><td>35</td><td class="num">3.66</td><td>65.7</td><td>28.6</td></tr>
-              <tr><td>Jhin</td><td>104</td><td class="num">3.67</td><td>67.3</td><td>21.2</td></tr>
-              <tr><td>Fiora</td><td>103</td><td class="num">3.81</td><td>66.0</td><td>19.4</td></tr>
-              <tr><td>Rhaast</td><td>142</td><td class="num">3.81</td><td>60.6</td><td>25.4</td></tr>
-              <tr><td>Shen</td><td>96</td><td class="num">3.84</td><td>64.6</td><td>19.8</td></tr>
-              <tr><td>Sona</td><td>50</td><td class="num">3.88</td><td>62.0</td><td>22.0</td></tr>
+              <tr><td>Factory New (Graves)</td><td>35</td><td class="num">3.66</td><td>65.7</td><td>28.6</td></tr>
+              <tr><td>Eradicator (Jhin)</td><td>104</td><td class="num">3.67</td><td>67.3</td><td>21.2</td></tr>
+              <tr><td>Divine Duelist (Fiora)</td><td>103</td><td class="num">3.81</td><td>66.0</td><td>19.4</td></tr>
+              <tr><td>Redeemer (Rhaast)</td><td>142</td><td class="num">3.81</td><td>60.6</td><td>25.4</td></tr>
+              <tr><td>Bulwark (Shen)</td><td>96</td><td class="num">3.84</td><td>64.6</td><td>19.8</td></tr>
+              <tr><td>Commander (Sona)</td><td>50</td><td class="num">3.88</td><td>62.0</td><td>22.0</td></tr>
               <tr><td>Primordian</td><td>45</td><td class="num">3.89</td><td>64.4</td><td>11.1</td></tr>
-              <tr><td>Vex</td><td>55</td><td class="num">3.93</td><td>61.8</td><td>23.6</td></tr>
-              <tr><td>Stargazer (Shield)</td><td>12</td><td class="num">4.00</td><td>66.7</td><td>0.0</td></tr>
-              <tr><td>DRX</td><td>235</td><td class="num">4.03</td><td>60.4</td><td>16.2</td></tr>
+              <tr><td>Doomer (Vex)</td><td>55</td><td class="num">3.93</td><td>61.8</td><td>23.6</td></tr>
               <tr><td>Fateweaver</td><td>92</td><td class="num">4.09</td><td>57.6</td><td>15.2</td></tr>
-              <tr><td>Blitzcrank</td><td>139</td><td class="num">4.10</td><td>59.7</td><td>18.0</td></tr>
-              <tr><td>Tahm Kench</td><td>171</td><td class="num">4.18</td><td>57.9</td><td>17.0</td></tr>
+              <tr><td>Party Animal (Blitzcrank)</td><td>139</td><td class="num">4.10</td><td>59.7</td><td>18.0</td></tr>
+              <tr><td>Oracle (Tahm Kench)</td><td>171</td><td class="num">4.18</td><td>57.9</td><td>17.0</td></tr>
               <tr><td>Psionic</td><td>99</td><td class="num">4.21</td><td>56.6</td><td>16.2</td></tr>
               <tr><td>Stargazer (Mountain)</td><td>14</td><td class="num">4.21</td><td>64.3</td><td>14.3</td></tr>
               <tr><td>Timebreaker</td><td>137</td><td class="num">4.26</td><td>53.3</td><td>16.8</td></tr>
@@ -133,16 +133,15 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
               <tr><td>Space Groove</td><td>237</td><td class="num">4.41</td><td>50.6</td><td>13.5</td></tr>
               <tr><td>Mecha</td><td>39</td><td class="num">4.46</td><td>48.7</td><td>23.1</td></tr>
               <tr><td>Dark Star</td><td>229</td><td class="num">4.58</td><td>48.5</td><td>14.0</td></tr>
-              <tr><td>Stargazer (Wolf)</td><td>13</td><td class="num">4.62</td><td>53.8</td><td>0.0</td></tr>
-              <tr><td>Astronaut</td><td>113</td><td class="num">4.69</td><td>48.7</td><td>12.4</td></tr>
-              <tr><td>Admin</td><td>50</td><td class="num">4.76</td><td>44.0</td><td>10.0</td></tr>
-              <tr class="row-flag"><td>Miss Fortune</td><td>16</td><td class="num">5.56</td><td>18.8</td><td>6.3</td></tr>
+              <tr><td>Meeple</td><td>113</td><td class="num">4.69</td><td>48.7</td><td>12.4</td></tr>
+              <tr><td>Arbiter</td><td>50</td><td class="num">4.76</td><td>44.0</td><td>10.0</td></tr>
+              <tr class="row-flag"><td>Gun Goddess (Miss Fortune)</td><td>16</td><td class="num">5.56</td><td>18.8</td><td>6.3</td></tr>
             </tbody>
           </table>
         </div>
 
-        <p>Morgana, Graves, and Jhin are, by a clear margin, my three strongest lines--all sitting comfortably under a 3.7 average placement with top-four rates north of 65%. Miss Fortune sits alone at 5.56 average placement and an 18.8% top-four rate across sixteen games--nothing else on the list is close. Sixteen games is enough that I don't think it's noise, but it isn't enough on its own to tell me why. <strong>My best guess is itemization or positioning rather than the trait itself, and that's a hypothesis, not a finding--exactly the kind of question a replay review tool would actually help me answer.</strong></p>
-        <p class="aside">This table excludes eleven internal engine tags (Mana, AP, AS, Assassin, Melee, Ranged, HP Tank, Shield Tank, Resist, Summon, Flex) that showed up in the raw API data but aren't real traits--see <a href="#methodology" class="brand-link">Building the Dataset</a> for how I caught that.</p>
+        <p>Dark Lady, Factory New, and Eradicator--Morgana, Graves, and Jhin's respective traits--are, by a clear margin, my three strongest lines, all sitting comfortably under a 3.7 average placement with top-four rates north of 65%. Gun Goddess (Miss Fortune) sits alone at 5.56 average placement and an 18.8% top-four rate across sixteen games--nothing else on the list is close. Sixteen games is enough that I don't think it's noise, but it isn't enough on its own to tell me why. <strong>My best guess is itemization or positioning rather than the trait itself, and that's a hypothesis, not a finding--exactly the kind of question a replay review tool would actually help me answer.</strong></p>
+        <p class="aside">This table excludes fourteen names that don't correspond to real Set 17 traits: eleven internal engine tags (Mana, AP, AS, Assassin, Melee, Ranged, HP Tank, Shield Tank, Resist, Summon, Flex) and three more (DRX, Stargazer Wolf, Stargazer Shield) confirmed absent from the actual game entirely--see <a href="#methodology" class="brand-link">Building the Dataset</a> for both.</p>
       </div>
 
       <div id="find-2" class="finding">
@@ -175,27 +174,28 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
           <h3 class="finding-title">Comp Identification</h3>
         </div>
         <p class="question-lead">What are my most-played comps, and how do they actually compare to each other?</p>
-        <p>Grouping games by the exact set of active traits--now that the eleven fake ones are out of the signature--surfaces 9 distinct comps played 8 or more times.</p>
+        <p>Grouping games by the exact set of active traits--now with the fourteen non-real names out and everything relabeled to its actual display name--surfaces 10 distinct comps played 8 or more times.</p>
 
         <div class="table-wrap">
           <table class="data-table">
             <thead><tr><th>Comp (core traits)</th><th>Games</th><th>Avg Placement</th><th>Top4%</th><th>Win%</th></tr></thead>
             <tbody>
-              <tr class="row-flag"><td>Astronaut / Fateweaver / Shen / Timebreaker</td><td>14</td><td class="num">3.07</td><td>85.7</td><td>35.7</td></tr>
-              <tr><td>Admin / Blitzcrank / Dark Star / Space Groove</td><td>10</td><td class="num">3.70</td><td>80.0</td><td>10.0</td></tr>
-              <tr><td>DRX / Fiora / Psionic / Tahm Kench</td><td>22</td><td class="num">4.00</td><td>72.7</td><td>4.5</td></tr>
-              <tr><td>Dark Star / Psionic / Rhaast / Space Groove</td><td>11</td><td class="num">4.09</td><td>54.5</td><td>18.2</td></tr>
-              <tr><td>Astronaut / Dark Star / Rhaast / Space Groove</td><td>13</td><td class="num">4.23</td><td>61.5</td><td>7.7</td></tr>
-              <tr><td>Blitzcrank / Dark Star / Sona / Space Groove / Vex</td><td>12</td><td class="num">4.25</td><td>58.3</td><td>8.3</td></tr>
-              <tr><td>DRX / Mecha / Rhaast</td><td>12</td><td class="num">4.50</td><td>50.0</td><td>25.0</td></tr>
-              <tr><td>DRX / Fateweaver / Stargazer (Medallion) / Timebreaker</td><td>8</td><td class="num">5.00</td><td>25.0</td><td>12.5</td></tr>
-              <tr class="row-flag"><td>Astronaut / Fateweaver / Timebreaker</td><td>11</td><td class="num">5.91</td><td>9.1</td><td>0.0</td></tr>
+              <tr class="row-flag"><td>Meeple / Fateweaver / Bulwark / Timebreaker</td><td>14</td><td class="num">3.07</td><td>85.7</td><td>35.7</td></tr>
+              <tr><td>Arbiter / Party Animal / Dark Star / Space Groove</td><td>10</td><td class="num">3.70</td><td>80.0</td><td>10.0</td></tr>
+              <tr><td>Divine Duelist / Psionic / Oracle</td><td>22</td><td class="num">4.00</td><td>72.7</td><td>4.5</td></tr>
+              <tr><td>Dark Star / Psionic / Redeemer / Space Groove</td><td>11</td><td class="num">4.09</td><td>54.5</td><td>18.2</td></tr>
+              <tr><td>Meeple / Dark Star / Redeemer / Space Groove</td><td>13</td><td class="num">4.23</td><td>61.5</td><td>7.7</td></tr>
+              <tr><td>Party Animal / Dark Star / Commander / Space Groove / Doomer</td><td>12</td><td class="num">4.25</td><td>58.3</td><td>8.3</td></tr>
+              <tr><td>Mecha / Redeemer</td><td>12</td><td class="num">4.50</td><td>50.0</td><td>25.0</td></tr>
+              <tr><td>Fateweaver / Stargazer (Medallion) / Timebreaker</td><td>8</td><td class="num">5.00</td><td>25.0</td><td>12.5</td></tr>
+              <tr class="row-flag"><td>Meeple / Fateweaver / Timebreaker</td><td>13</td><td class="num">5.69</td><td>15.4</td><td>7.7</td></tr>
+              <tr class="row-flag"><td>Meeple (alone)</td><td>8</td><td class="num">6.88</td><td>0.0</td><td>0.0</td></tr>
             </tbody>
           </table>
         </div>
 
-        <p>The Astronaut/Fateweaver/Shen/Timebreaker comp is clearly my best line: 3.07 average placement, 85.7% top-four, 35.7% win rate across fourteen games. That part isn't surprising. What is surprising is the bottom row: <strong>Astronaut/Fateweaver/Timebreaker--the exact same core, minus Shen--sits dead last</strong> at 5.91 average placement, 9.1% top-four, and zero wins in eleven games. One trait is the entire difference between my best comp and my worst. I hadn't clocked how load-bearing Shen was in that lineup until the data forced the two apart into separate rows.</p>
-        <p>The other result worth flagging: DRX/Fiora/Psionic/Tahm Kench hits top-four nearly three-quarters of the time (72.7%) across twenty-two games--my most-played comp on this list--but converts to a win only 4.5% of the time. That's not a weak comp, it's a comp with a ceiling: reliable enough to stabilize a lobby that's already going sideways, not built to actually close a game out.</p>
+        <p>Meeple/Fateweaver/Bulwark/Timebreaker is clearly my best line: 3.07 average placement, 85.7% top-four, 35.7% win rate across fourteen games. That part isn't surprising. What is genuinely interesting is the bottom two rows, because they isolate one trait at a time. <strong>Drop Bulwark and keep the other three</strong>--Meeple/Fateweaver/Timebreaker--and the same core falls to 5.69 average placement, 15.4% top-four, 7.7% win rate across thirteen games. <strong>Drop Fateweaver and Timebreaker too, and it's just Meeple alone</strong>--eight games, 6.88 average placement, zero top-fours, zero wins. Three data points, one trait removed at a time, and the placement gets worse in a straight line each time. I hadn't clocked how load-bearing Bulwark specifically was in that lineup until DRX stopped contaminating the comp signature and let these variants separate into their own rows instead of blending together.</p>
+        <p>The other result worth flagging: Divine Duelist/Psionic/Oracle hits top-four nearly three-quarters of the time (72.7%) across twenty-two games--my most-played comp on this list--but converts to a win only 4.5% of the time. That's not a weak comp, it's a comp with a ceiling: reliable enough to stabilize a lobby that's already going sideways, not built to actually close a game out.</p>
         <p class="aside">This groups by exact trait-set match, so two games that are functionally the same comp with one flex-slot trait swapped won't merge here. A simplification I made on purpose, not something I missed.</p>
       </div>
 

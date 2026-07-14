@@ -26,25 +26,30 @@ The exclusion logic (`set17_participants_clean`) requires the low-unit-count *an
 
 ## Data Quality: Traits That Weren't Traits
 
-The raw `traits` array Riot's API returns mixes real, player-facing traits with internal engine classification tags — role/stat labels used for backend logic that never show up in the trait bar. Caught by naming convention: every real trait either has a proper name (`DRX`, `Fateweaver`, `Stargazer_*`) or follows the per-champion `<Name>UniqueTrait` pattern, while eleven names instead used a bare stat/role word: `ManaTrait`, `APTrait`, `ASTrait`, `AssassinTrait`, `MeleeTrait`, `RangedTrait`, `HPTank`, `ShieldTank`, `ResistTank`, `SummonTrait`, `FlexTrait`. Confirmed against real in-game trait names and excluded via a `real_traits` view. This affected both the Trait Performance and Comp Identification queries below — the latter especially, since comp signatures had been mixing real traits with generic role tags in the same grouping.
+Two passes here, not one. First pass: the raw `traits` array Riot's API returns mixes real, player-facing traits with internal engine classification tags — role/stat labels used for backend logic that never show up in the trait bar. Caught by naming convention (bare stat word vs. a real name) and confirmed against real in-game trait names: `ManaTrait`, `APTrait`, `ASTrait`, `AssassinTrait`, `MeleeTrait`, `RangedTrait`, `HPTank`, `ShieldTank`, `ResistTank`, `SummonTrait`, `FlexTrait` — eleven names, all excluded.
+
+Second pass, prompted by more names not being recognized (`DRX`, `Admin`, `Stargazer Wolf` again): it turns out Riot's raw API identifiers frequently don't match the real in-game display name at all. Cross-referencing external trait databases (tactics.tools, blitz.gg) surfaced two distinct problems:
+
+1. **Wrong labels on my part.** The champion-linked "unique" traits display under completely different names than the champion itself: Morgana → **Dark Lady**, Jhin → **Eradicator**, Fiora → **Divine Duelist**, Rhaast → **Redeemer**, Shen → **Bulwark**, Sona → **Commander**, Vex → **Doomer**, Blitzcrank → **Party Animal**, Tahm Kench → **Oracle**, Graves → **Factory New**, Miss Fortune → **Gun Goddess**. `Astronaut` isn't a champion reference at all — the real trait is **Meeple**. `Admin` is real too, as **Arbiter**.
+2. **Genuinely fake.** `DRX` and `Stargazer_Wolf`/`Stargazer_Shield` don't exist in Set 17 at all, confirmed absent across three independent sources. The real Stargazer constellation set is Serpent, Huntress, Mountain, Altar, Medallion, Fountain, Boar — Wolf and Shield were never among them. These three are now excluded via `real_traits` the same way as the eleven engine tags; everything below uses the corrected names.
 
 ## Findings
 
 ### 1. Trait Performance
 
-Average placement by active trait (tier_current > 0), min. 10 games played, after excluding the 11 non-real trait tags above.
+Average placement by active trait (tier_current > 0), min. 10 games played, after excluding all 14 non-real names above. Champion-linked traits are shown with the champion in parentheses.
 
 | Trait | Games | Avg Placement | Top4% | Win% |
 |---|---|---|---|---|
-| Morgana | 47 | 3.45 | 70.2 | 17.0 |
-| Stargazer Medallion | 17 | 3.53 | 58.8 | 29.4 |
-| Graves | 35 | 3.66 | 65.7 | 28.6 |
-| Jhin | 104 | 3.67 | 67.3 | 21.2 |
-| Fiora | 103 | 3.81 | 66.0 | 19.4 |
+| Dark Lady (Morgana) | 47 | 3.45 | 70.2 | 17.0 |
+| Stargazer (Medallion) | 17 | 3.53 | 58.8 | 29.4 |
+| Factory New (Graves) | 35 | 3.66 | 65.7 | 28.6 |
+| Eradicator (Jhin) | 104 | 3.67 | 67.3 | 21.2 |
+| Divine Duelist (Fiora) | 103 | 3.81 | 66.0 | 19.4 |
 | ... | | | | |
-| Miss Fortune | 16 | **5.56** | 18.8 | 6.3 |
+| Gun Goddess (Miss Fortune) | 16 | **5.56** | 18.8 | 6.3 |
 
-Morgana, Graves, and Jhin comps are the strongest lines by a clear margin. Miss Fortune is a sharp outlier on the underperforming end — 5.56 avg placement and only 18.8% top-4 across 16 games, well below every other trait. Worth a closer look at *why* (itemization, positioning, or just a weak line in the current meta) before playing it again.
+Dark Lady, Factory New, and Eradicator (Morgana, Graves, and Jhin's traits) are the strongest lines by a clear margin. Gun Goddess is a sharp outlier on the underperforming end — 5.56 avg placement and only 18.8% top-4 across 16 games, well below every other trait. Worth a closer look at *why* (itemization, positioning, or just a weak line in the current meta) before playing it again.
 
 ### 2. Economy vs. Placement
 
@@ -61,21 +66,22 @@ Overall Pearson r = **-0.013** — essentially no linear relationship, and the b
 
 ### 3. Comp Identification
 
-Grouping games by the exact set of active traits (with the 11 fake tags removed) surfaces 9 distinct comps played 8+ times:
+Grouping games by the exact set of active traits (with all 14 non-real names out and everything relabeled) surfaces 10 distinct comps played 8+ times:
 
 | Comp (core traits) | Games | Avg Placement | Top4% | Win% |
 |---|---|---|---|---|
-| Astronaut / Fateweaver / Shen / Timebreaker | 14 | **3.07** | 85.7 | 35.7 |
-| Admin / Blitzcrank / Dark Star / Space Groove | 10 | 3.70 | 80.0 | 10.0 |
-| DRX / Fiora / Psionic / Tahm Kench | 22 | 4.00 | 72.7 | 4.5 |
-| Dark Star / Psionic / Rhaast / Space Groove | 11 | 4.09 | 54.5 | 18.2 |
-| Astronaut / Dark Star / Rhaast / Space Groove | 13 | 4.23 | 61.5 | 7.7 |
-| Blitzcrank / Dark Star / Sona / Space Groove / Vex | 12 | 4.25 | 58.3 | 8.3 |
-| DRX / Mecha / Rhaast | 12 | 4.50 | 50.0 | 25.0 |
-| DRX / Fateweaver / Stargazer Medallion / Timebreaker | 8 | 5.00 | 25.0 | 12.5 |
-| Astronaut / Fateweaver / Timebreaker | 11 | **5.91** | 9.1 | **0.0** |
+| Meeple / Fateweaver / Bulwark / Timebreaker | 14 | **3.07** | 85.7 | 35.7 |
+| Arbiter / Party Animal / Dark Star / Space Groove | 10 | 3.70 | 80.0 | 10.0 |
+| Divine Duelist / Psionic / Oracle | 22 | 4.00 | 72.7 | 4.5 |
+| Dark Star / Psionic / Redeemer / Space Groove | 11 | 4.09 | 54.5 | 18.2 |
+| Meeple / Dark Star / Redeemer / Space Groove | 13 | 4.23 | 61.5 | 7.7 |
+| Party Animal / Dark Star / Commander / Space Groove / Doomer | 12 | 4.25 | 58.3 | 8.3 |
+| Mecha / Redeemer | 12 | 4.50 | 50.0 | 25.0 |
+| Fateweaver / Stargazer Medallion / Timebreaker | 8 | 5.00 | 25.0 | 12.5 |
+| Meeple / Fateweaver / Timebreaker | 13 | **5.69** | 15.4 | 7.7 |
+| Meeple (alone) | 8 | **6.88** | 0.0 | 0.0 |
 
-The best line is Astronaut/Fateweaver/Shen/Timebreaker (3.07 avg, 85.7% top-4, 35.7% win). The standout finding is the bottom row: **the exact same core minus Shen** — Astronaut/Fateweaver/Timebreaker — sits dead last at 5.91 avg, 9.1% top-4, zero wins in 11 games. One trait is the entire gap between my best comp and my worst; I hadn't clocked how load-bearing Shen was until removing the fake trait tags forced the two variants apart into separate rows instead of blending together. Separately, DRX/Fiora/Psionic/Tahm Kench is my most-played comp on this list (22 games) and hits top-4 72.7% of the time, but converts to a win only 4.5% of the time — a comp with a ceiling, good for stabilizing a rough lobby but not for closing games out.
+The best line is Meeple/Fateweaver/Bulwark/Timebreaker (3.07 avg, 85.7% top-4, 35.7% win). The bottom two rows isolate one trait at a time and are the standout finding: drop Bulwark and the same core (Meeple/Fateweaver/Timebreaker) falls to 5.69 avg, 15.4% top-4, 7.7% win across 13 games; drop Fateweaver and Timebreaker too and it's just Meeple alone — 8 games, 6.88 avg, zero top-4s, zero wins. Placement gets worse in a straight line as pieces of the comp are removed. I hadn't clocked how load-bearing Bulwark specifically was until DRX stopped contaminating the comp signature and let these variants separate into their own rows. Separately, Divine Duelist/Psionic/Oracle is my most-played comp on this list (22 games) and hits top-4 72.7% of the time, but converts to a win only 4.5% of the time — a comp with a ceiling, good for stabilizing a rough lobby but not for closing games out.
 
 *Caveat: this groups by exact trait-set match, so two games that are "the same comp" with one flex-slot trait swapped won't merge — a simplification, not a bug.*
 

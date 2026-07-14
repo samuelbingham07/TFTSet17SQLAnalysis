@@ -54,12 +54,18 @@ CREATE TABLE IF NOT EXISTS me (
     puuid TEXT PRIMARY KEY
 );
 
--- Riot's traits array mixes real, player-facing traits with internal engine
--- classification tags (role/stat labels used for backend logic, never shown
--- in the trait bar). Identified by naming convention: every real trait has
--- either a proper name (DRX, Fateweaver, Stargazer_*) or the per-champion
--- <Name>UniqueTrait pattern; these instead are bare stat/role words, and
--- were confirmed as not real by checking against actual in-game trait names.
+-- Riot's traits array mixes real, player-facing traits with names that don't
+-- correspond to anything in the actual game. Two distinct problems, found in
+-- two passes:
+--   1. Internal engine classification tags (bare stat/role words like
+--      ManaTrait, HPTank) that never show up in the trait bar. Caught by
+--      naming convention, confirmed against real in-game trait names.
+--   2. A handful of proper-noun-styled names (DRX, Stargazer_Wolf,
+--      Stargazer_Shield) that looked legitimate by that same convention but
+--      simply don't exist in Set 17 at all -- confirmed by cross-referencing
+--      external trait databases (tactics.tools, blitz.gg). The real Stargazer
+--      constellation set is Serpent/Huntress/Mountain/Altar/Medallion/
+--      Fountain/Boar; Wolf and Shield aren't among them.
 CREATE TABLE IF NOT EXISTS excluded_trait_tags (name TEXT PRIMARY KEY);
 INSERT OR IGNORE INTO excluded_trait_tags (name) VALUES
     ('TFT17_ManaTrait'),
@@ -72,7 +78,10 @@ INSERT OR IGNORE INTO excluded_trait_tags (name) VALUES
     ('TFT17_ShieldTank'),
     ('TFT17_ResistTank'),
     ('TFT17_SummonTrait'),
-    ('TFT17_FlexTrait');
+    ('TFT17_FlexTrait'),
+    ('TFT17_DRX'),
+    ('TFT17_Stargazer_Wolf'),
+    ('TFT17_Stargazer_Shield');
 
 CREATE VIEW IF NOT EXISTS real_traits AS
     SELECT * FROM traits WHERE name NOT IN (SELECT name FROM excluded_trait_tags);
