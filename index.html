@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/jpeg" href="thumbnail.jpg" />
   <meta property="og:title" content="TFT Set 17, By The Numbers" />
-  <meta property="og:description" content="A SQL analysis of my own Set 17 ranked match history--556 games, queried the way I'd want a PM to query product data." />
+  <meta property="og:description" content="An SQL analysis of my own Set 17 ranked match history--556 games, queried the way I'd want a PM to query product data." />
   <meta property="og:image" content="https://samuelbingham07.github.io/TFTSet17SQLAnalysis/thumbnail.jpg" />
   <meta property="og:type" content="article" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -52,24 +52,23 @@
         <span>July 2026</span>
       </div>
       <p class="hero-tagline">
-        An SQL analysis of my own Set 17 ranked match history--556 games, pulled from Riot's API into a relational database and interrogated the way I'd want a PM to interrogate product data. I pose a hypothesis, run the query, and analyze what the number might support.
+        An SQL analysis of my own Set 17 ranked match history--556 games, pulled from Riot's API into a relational database and interrogated the way I interrogate product data as a PM. I pose hypotheses, run queries, and analyze the results! I thought it would be fun to do for the first set I hit Challenger to see what went right, as well as what could go better.
       </p>
     </header>
 
     <section id="overview" class="section">
       <h2 class="section-heading">Project Overview</h2>
-      <p>I think the natural extension of the <a href="https://samuelbingham07.github.io/TFTCaseStudy/" target="_blank" rel="noopener" class="brand-link">product teardown</a> I wrote on TFT is to turn the same scrutiny on my own play. If I'm going to argue that Riot should build post-game analysis tooling for mid-ranked players, I should be willing to run that kind of analysis on myself first, and with real data.</p>
 
-      <p>This project pulls my full Set 17 ranked match history through Riot's TFT API, models it into a relational schema, and asks it the same kind of questions I'd ask of any product dataset. <strong>Pose a hypothesis, run the query, and be honest about what the result actually supports--including the times it didn't support what I expected going in.</strong></p>
+      <p>This project pulls my full Set 17 ranked match history through Riot's TFT API, models it into a relational schema, and asks it the same kind of questions I'd ask of any product dataset. <strong>Pose a hypothesis, run the query, and analyze what the result actually supports, including the times it didn't support what I expected.</strong></p>
 
       <div class="rank-proof">
         <img src="rank-screenshot.png" alt="ExactCylinder96#NA1 -- Set 17 LP history, 720 LP peak across 561 games" />
         <p class="rank-caption">Set 17 -- 720 LP peak across 561 games. Grandmaster (394 LP) as of this writing.</p>
       </div>
 
-      <p>I fetched 563 final boards from the API. Of the 563, I ended up excluding 7 as outlier games whose final boards don't reflect the games themselves at all. more on how and why in the next section. That left <strong>556 games</strong> behind every number on this page.</p>
+      <p>I fetched 563 final boards from the API. Of the 563, I ended up excluding 7 as outlier games whose final boards don't reflect the games themselves at all. That left <strong>556 games</strong> behind the data on this page.</p>
 
-      <p class="aside"><strong>Why this, and why SQL:</strong> the point was never to build the most sophisticated pipeline I could. It was to practice real SQL (joins, aggregation, a hand-rolled correlation coefficient) against a dataset I actually have the context to sanity-check. A few of the findings below didn't survive that sanity check on the first pass, and I've left those visible.</p>
+      <p class="aside"><strong>Why this, and why SQL:</strong> the point was never to build the most sophisticated pipeline I could. It was to practice real SQL (joins, aggregation, a hand-rolled correlation coefficient) against a dataset I actually have my own context to sanity-check. A few of the findings below didn't survive that sanity check on the first pass, and I've left those visible.</p>
     </section>
 
     <section id="methodology" class="section">
@@ -83,14 +82,14 @@ src/schema.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;normalized S
 src/load_db.py&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;parses cached JSON <span class="hl">-&gt;</span> data/tft.db
 analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the actual analysis queries, one file per question</div>
 
-      <p>Five tables hold the data--<code>matches</code>, <code>participants</code>, <code>units</code>, <code>unit_items</code>, and <code>traits</code>--plus two views that do the scoping so I'm not repeating the same <code>WHERE</code> clause in every query. <code>set17_participants</code> filters everything down to Set 17; <code>set17_participants_clean</code> additionally strips the outlier games below. Augments were part of the original plan and had to be cut entirely because they unfortunately aren't present anywhere in Riot's current match-v1 response (for good reason, since I think augment stats abuse does ruin player freedom and decision-making).</p>
+      <p>Five tables hold the data:<code>matches</code>, <code>participants</code>, <code>units</code>, <code>unit_items</code>, and <code>traits</code>. Plus two views that do the scoping so I'm not repeating the same <code>WHERE</code> clause in every query. <code>set17_participants</code> filters everything down to Set 17; <code>set17_participants_clean</code> additionally strips the outlier games below. Augment analysis would have been great, but it's impossible because they unfortunately aren't present anymore in Riot's current match-v1 response (for good reason, since I think augment stats abuse used to mess with player freedom, decision-making, and skill-expression).</p>
 
       <h3 class="subsection-heading">Outliers</h3>
       <p>Two unique endgame situations show up in this data clearly enough that would have skewed every trait and comp number if not omitted.</p>
 
-      <p>The first is <strong>selling my board to hyper-roll for a three-star five-cost</strong>, something that occasionally becomes the optimal play when a lobby is already lost unless I gamble for a strong finish than accept a guaranteed 3rd or 2nd. In these games, there's a real gap in the data, final boards are comprised of just 5 costs with no syngeries (since all other units were sold of for rerolling), and paired with <code>gold_left</code> near zero and a very late <code>last_round</code>.</p>
+      <p>The first is <strong>selling my board to donkey-roll for a three-star five-cost</strong>, something that occasionally becomes the optimal play when a lobby is already lost, unless I gamble for a strong finish than accept a guaranteed 3rd or 2nd. In these games, there's a real gap in the data, final boards are comprised of just 5 costs with no syngeries (since all other units were sold of for rerolling), and paired with <code>gold_left</code> near zero and a very late <code>last_round</code>.</p>
 
-      <p>The second is <strong>leaving the game (like a ragequit) once eighth place is already locked in</strong>. That one turned out to be rarer than I expected, and showed up as exactly one game: 147 gold left at round 20, with a level too low for how far the game had progressed to be anything but someone who'd stopped trying.</p>
+      <p>The second is <strong>leaving the game (like a ragequit) once eighth place is already locked in</strong>. That one turned out to be rarer than I remembered, and showed up as exactly one game: 147 gold left at round 20, with a level too low for how far the game had progressed to be anything but someone who'd left.</p>
 
       <p>In the end, only <strong>7 of 563 games</strong> (about 1 in 80) met both conditions and were cut.</p>
 
