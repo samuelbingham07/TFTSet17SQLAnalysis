@@ -151,7 +151,7 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
           <h3 class="finding-title">Economy vs. Placement</h3>
         </div>
         <p class="question-lead">Does gold left at game-end actually predict placement?</p>
-        <p>I grouped sub-10 gold as one group here rather than splitting out exactly-zero, because both represent the same underlying decision: capping out a board and spending down, knowing elimination might be close. What actually matters isn't 0 versus 7 gold--it's low gold versus a lot of banked gold, and whether that low-gold state shows up early or late.</p>
+        <p>I grouped sub-10 gold as one group here rather than splitting out exactly-zero, because both represent games where I give up on greeding for interest and cap out a board by rolling down, knowing I could get eliminated in the next round. What actually matters isn't 0 versus 7 gold--it's low gold versus a lot of banked gold, and whether that low-gold state shows up early or late.</p>
 
         <div class="table-wrap">
           <table class="data-table">
@@ -159,14 +159,14 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
             <tbody>
               <tr><td>&lt;10</td><td>423</td><td class="num">4.39</td><td>52.2</td></tr>
               <tr><td>10-19</td><td>45</td><td class="num">4.49</td><td>51.1</td></tr>
-              <tr><td>20-29</td><td>31</td><td class="num">3.94</td><td>54.8</td></tr>
+              <tr class="row-flag"><td>20-29</td><td>31</td><td class="num">3.94</td><td>54.8</td></tr>
               <tr><td>30+</td><td>57</td><td class="num">4.49</td><td>52.6</td></tr>
             </tbody>
           </table>
         </div>
         <p class="stat-heading">Pearson r = -0.013 (n=556)</p>
-        <p>That's essentially zero linear relationship, and once <10 is grouped as one bucket, the bucketed view is honestly pretty flat too--everything sits within half a placement of everything else, except a modestly better 20-29 bucket that's only 31 games and could easily be noise. <strong>Gold left at game-end, on its own, tells me almost nothing.</strong></p>
-        <p>Splitting the low-gold bucket by how far the game had progressed is where the real signal shows up. The 18 times I hit under 10 gold before round 25--despite a perfectly reasonable level--produced an average placement of 7.83 with zero top-four finishes: fifteen eighths, three sevenths. That's a clean "capped out early and died anyway" pattern. The other 405 low-gold games, the ones that happened at round 25 or later, look completely different: 4.23 average placement, 54.6% top-four--basically average or slightly better. And the detail that actually surprised me: <strong>60 of my 82 wins end with under 10 gold left</strong>. Once I checked, that stopped being surprising--a board that's already won doesn't need banked economy, so of course a lot of my best games end with an empty bank. Low gold isn't good or bad on its own. Early, it's a death spiral. Late, it's often just what winning looks like.</p>
+        <p>That's essentially zero linear relationship, and once <10 is grouped as one bucket, the bucketed view is honestly pretty flat too--everything sits within half a placement of everything else, except a modestly better 20-29 bucket that's only 31 games and could easily be noise. <strong>By itself, gold left at game-end tells me almost nothing.</strong></p>
+        <p>Splitting the low-gold bucket by how far the game had progressed is where the real signal shows up. The 18 times I hit under 10 gold before round 25 (despite a perfectly reasonable level) produced an average placement of 7.83 with zero top-four finishes: fifteen eighths, three sevenths. These are games where I likely lowrolled, mistakenly played an overcontested line that I didn't hit, or just had poor line selection, and ended up rolling all the way down just to salvage a 6th or 7th (often failing). The other 405 low-gold games, the ones that happened at round 25 or later, look different: 4.23 average placement, 54.6% top-four. Of course, a lot of my best games end with little to no gold because my final board should always end on an attempted cap out. Low gold isn't good or bad on its own. Early, it's the sign of a bad game, and late, it's just what winning looks like.</p>
       </div>
 
       <div id="find-3" class="finding">
@@ -294,7 +294,7 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
               <tr><td>3rd game</td><td>78</td><td class="num">4.55</td><td>46.2</td></tr>
               <tr><td>4th-5th game</td><td>83</td><td class="num">4.52</td><td>54.2</td></tr>
               <tr><td>6th-8th game</td><td>42</td><td class="num">4.05</td><td>59.5</td></tr>
-              <tr><td>9th+ game</td><td>14</td><td class="num">3.29</td><td>64.3</td></tr>
+              <tr class="row-flag"><td>9th+ game</td><td>14</td><td class="num">3.29</td><td>64.3</td></tr>
             </tbody>
           </table>
         </div>

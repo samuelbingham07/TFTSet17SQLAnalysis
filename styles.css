@@ -312,13 +312,9 @@ em { font-style: italic; }
 }
 
 .data-table tbody tr:last-child td { border-bottom: none; }
-.data-table .num { color: var(--gold); font-weight: 600; }
+.data-table .num { color: var(--text-strong); font-weight: 600; }
 .data-table .row-flag td { color: var(--text-strong); }
-
-/* Finding 1 only: invert the gold/white split on the avg placement column --
-   flagged (best/worst) rows show gold, everything else shows white. */
-#find-1 .data-table .num { color: var(--text-strong); }
-#find-1 .data-table tr.row-flag td.num { color: var(--gold); }
+.data-table tr.row-flag td.num { color: var(--gold); }
 
 .table-wrap { overflow-x: auto; margin: 20px 0 28px; }
 .table-wrap .data-table { margin: 0; }
