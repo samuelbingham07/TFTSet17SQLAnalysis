@@ -124,6 +124,17 @@ Total items equipped across the whole final board vs. placement:
 
 Same trap as damage: more items on board is a proxy for more time alive, and more time alive is placement by definition — not treated as a real lever for the same reason. The per-item breakdown (min. 15 games) is more useful. Top: `Ornn Infinity Force` (16 games, 3.06 avg, 81.3% top-4) — a forged artifact item, small sample but a real standout. Bottom, and unexpected: **four of the worst-performing items are emblems** — Psionic (5.73 avg, 20% top-4, the single worst item in the dataset), Favored (4.60), Meeple/Astronaut (4.74), Dark Star (4.88). I don't think the emblem itself is causing the bad placement — an emblem gets slammed when a comp is already missing a natural holder of that trait, which is a patch, not a plan. The bad result more likely reflects the compromised board state that made the emblem necessary in the first place, not the item.
 
+A correction to the tautology point above: raw item count is only a proxy for time-alive when comparing across *different* games, which run wildly different lengths. A fairer cut is item count against the average of the other seven players in the same lobby, which controls for how fast or slow that specific game ran.
+
+| Relative Itemization | Games | Avg Placement | Top4% |
+|---|---|---|---|
+| Well below lobby | 105 | 6.43 | 14.3 |
+| Slightly below lobby | 124 | 5.17 | 36.3 |
+| Slightly above lobby | 138 | 3.91 | 60.9 |
+| Well above lobby | 189 | 3.07 | 77.8 |
+
+Pearson r = **-0.541** (n=556) — weaker than the damage and raw item-count correlations, and for good reason: this version isn't just restating game length. Having comparatively better itemization than the seven other players actually in that lobby tracks placement more honestly than comparing across games of totally different lengths. Still not fully clean — whoever places first in a given lobby also gets more time in that same game to itemize than whoever gets eliminated in round 10 — but it's a real signal, not just the tautology above wearing a different label.
+
 ### 7. Session Length and Tilt
 
 Grouped games into sessions using a window function: any gap of 45+ minutes between consecutive games starts a new session (a game runs ~35-40 min, and the gap distribution has a clean break there). 220 sessions total, averaging 2.53 games each, longest run 15 games.

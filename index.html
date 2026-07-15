@@ -271,6 +271,22 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
 
         <p>This is basically Finding 5 again, more items on board is really a proxy for more time alive, and more time alive is placement by definition. I'm not treating the item-count relationship as a real lever for the same reason damage wasn't one.</p>
         <p>The per-item breakdown is more useful, minimum 15 games each. At the top: <code>Ornn Infinity Force</code> (16 games, 3.06 avg, 81.3% top-4)--a forged artifact item, small sample, but a real standout. At the bottom, something I didn't expect going in: <strong>four of my worst-performing items are emblems</strong>--Psionic (5.73 avg, 20% top-4, my single worst item), Favored (4.60), Meeple/Astronaut (4.74), and Dark Star (4.88). <strong>I don't think the emblem is what's causing the bad placement.</strong> An emblem gets slammed when a comp is already missing a natural holder of that trait--it's a patch, not a plan. The bad result more likely reflects the compromised board state that made the emblem necessary in the first place, not the item itself. Worth remembering next time I'm reaching for one under pressure.</p>
+
+        <p>A correction to the tautology point above: raw item count is only a proxy for time-alive when you compare across <em>different</em> games, which run wildly different lengths. A fairer cut is my item count against the average of the other seven players in the same lobby, which controls for how fast or slow that specific game ran.</p>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Relative Itemization</th><th>Games</th><th>Avg Placement</th><th>Top4%</th></tr></thead>
+            <tbody>
+              <tr><td>Well below lobby</td><td>105</td><td class="num">6.43</td><td>14.3</td></tr>
+              <tr><td>Slightly below lobby</td><td>124</td><td class="num">5.17</td><td>36.3</td></tr>
+              <tr><td>Slightly above lobby</td><td>138</td><td class="num">3.91</td><td>60.9</td></tr>
+              <tr><td>Well above lobby</td><td>189</td><td class="num">3.07</td><td>77.8</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="stat-heading">Pearson r = -0.541 (n=556)</p>
+        <p>Weaker than the damage and raw item-count correlations, and for good reason--this version isn't just restating game length. Having comparatively better itemization than the seven other players actually in that lobby tracks placement more honestly than comparing across games of totally different lengths. It's still not fully clean: whoever places first in a given lobby also gets more time in that same game to itemize than whoever gets eliminated in round 10. But it's a real signal, not just the tautology above wearing a different label.</p>
       </div>
 
       <div id="find-7" class="finding">
