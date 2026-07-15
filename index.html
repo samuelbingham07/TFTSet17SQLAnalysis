@@ -245,11 +245,8 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
         </div>
         <p class="stat-heading">Pearson r = -0.916 (n=556)</p>
 
-        <blockquote class="pullquote">
-          By far the strongest correlation in the entire analysis, and the one I trust the least.
-        </blockquote>
 
-        <p>I'm including this one on purpose, not because it's a real finding but because it's a useful trap to walk through. <code>total_damage_to_players</code> accumulates every round a board is still alive, so surviving longer--which is, definitionally, what placement measures--mechanically produces more damage dealt, independent of whether the comp underneath it is actually good. <strong>A correlation this strong should make you suspicious, not confident.</strong> Trait choice, econ discipline, and comp selection are decisions I can act on next game. Damage dealt is just placement, wearing a different unit.</p>
+        <p>Unsurprisingly, this is the highest correlation in my dataset. Of course, if you deal damage, you are surviving rounds and outliving opponents, so you place better. The nuance is in whether the final board is independent of damage dealt. For example, arguably the highest capping board in the game is an Anima Cashout board. However, an Anima game that relies on loss-streaking to be successful is paradoxical to the data here, because you will not be dealing as much damage as a game where you win-streak the whole time. What a deeper analysis would likely reveal is that ending the game on a Mech board with a Jinx 3 with Battle Bunny Crossbow(from a 400 cashout), a Fiora 2 with an Anima item (from a 500 cashout), or any other obvious indicator on a final board that a 400-600 Anima cashout was completed results in a high AVP, but not as high of damage dealt. As of now, I cannot tell what portion of the lower damage dealt games reflect this risky playstyle of loss-streak into winnout, whether it's Anima or Fast 9.</p>
       </div>
 
       <div id="find-6" class="finding">
