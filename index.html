@@ -245,7 +245,6 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
         </div>
         <p class="stat-heading">Pearson r = -0.916 (n=556)</p>
 
-
         <p>Unsurprisingly, this is the highest correlation in my dataset. Of course, if you deal damage, you are surviving rounds and outliving opponents, so you place better. The nuance is in whether the final board is independent of damage dealt. For example, arguably the highest capping board in the game is an Anima Cashout board. However, an Anima game that relies on loss-streaking to be successful is paradoxical to the data here, because you will not be dealing as much damage as a game where you win-streak the whole time. What a deeper analysis would likely reveal is that ending the game on a Mech board with a Jinx 3 with Battle Bunny Crossbow(from a 400 cashout), a Fiora 2 with an Anima item (from a 500 cashout), or any other obvious indicator on a final board that a 400-600 Anima cashout was completed results in a high AVP, but not as high of damage dealt. As of now, I cannot tell what portion of the lower damage dealt games reflect this risky playstyle of loss-streak into winnout, whether it's Anima or Fast 9.</p>
       </div>
 
@@ -270,7 +269,7 @@ analysis/*.sql&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the ac
           </table>
         </div>
 
-        <p>This is basically Finding 5 again wearing a different unit: more items on board is really a proxy for more time alive, and more time alive is placement by definition. I'm not treating the item-count relationship as a real lever for the same reason damage wasn't one.</p>
+        <p>This is basically Finding 5 again, more items on board is really a proxy for more time alive, and more time alive is placement by definition. I'm not treating the item-count relationship as a real lever for the same reason damage wasn't one.</p>
         <p>The per-item breakdown is more useful, minimum 15 games each. At the top: <code>Ornn Infinity Force</code> (16 games, 3.06 avg, 81.3% top-4)--a forged artifact item, small sample, but a real standout. At the bottom, something I didn't expect going in: <strong>four of my worst-performing items are emblems</strong>--Psionic (5.73 avg, 20% top-4, my single worst item), Favored (4.60), Meeple/Astronaut (4.74), and Dark Star (4.88). <strong>I don't think the emblem is what's causing the bad placement.</strong> An emblem gets slammed when a comp is already missing a natural holder of that trait--it's a patch, not a plan. The bad result more likely reflects the compromised board state that made the emblem necessary in the first place, not the item itself. Worth remembering next time I'm reaching for one under pressure.</p>
       </div>
 
