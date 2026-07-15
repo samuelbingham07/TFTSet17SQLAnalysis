@@ -77,7 +77,7 @@ Grouping games by the exact set of active traits (with all 14 non-real names out
 | Meeple / Dark Star / Redeemer / Space Groove | 13 | 4.23 | 61.5 | 7.7 |
 | Party Animal / Dark Star / Commander / Space Groove / Doomer | 12 | 4.25 | 58.3 | 8.3 |
 | Mecha / Redeemer | 12 | 4.50 | 50.0 | 25.0 |
-| Fateweaver / Stargazer Medallion / Timebreaker | 8 | 5.00 | 25.0 | 12.5 |
+| Fateweaver / Stargazer (Medallion) / Timebreaker | 8 | 5.00 | 25.0 | 12.5 |
 | Meeple / Fateweaver / Timebreaker | 13 | **5.69** | 15.4 | 7.7 |
 | Meeple (alone) | 8 | **6.88** | 0.0 | 0.0 |
 
@@ -108,7 +108,7 @@ Honest read: there's no clean "steady improvement" story here. Week 15 (right af
 | 150-199 | 86 | 1.43 | 100.0 |
 | 200+ | 25 | 1.12 | 100.0 |
 
-Pearson r = **-0.916**, by far the strongest correlation in the whole analysis — and the least useful one. `total_damage_to_players` accumulates every round you're still alive, so surviving longer (which *is* placement) mechanically produces more damage dealt, independent of whether the comp itself is actually strong. This is included deliberately as a contrast case: not every strong correlation is a lever you can pull. Trait choice, econ discipline, and comp selection are decisions; damage dealt is closer to a restatement of the outcome.
+Pearson r = **-0.916**, by far the strongest correlation in the whole analysis. Unsurprisingly — if you deal damage, you're surviving rounds and outliving opponents, so you place better. The nuance is in whether the final board is independent of damage dealt. Arguably the highest-capping board in the game is an Anima Cashout board, but an Anima game that relies on loss-streaking to be successful is paradoxical to this correlation, because you don't deal as much damage as a game where you win-streak the whole time. What a deeper analysis would likely reveal is that ending the game on a board with an obvious cashout signal (a 3-starred carry off a 400-600 gold Anima cashout, for instance) results in a high placement but not correspondingly high damage dealt. As of now, I can't tell what portion of the lower-damage games reflect this risky loss-streak-into-winnout playstyle, whether it's Anima or Fast 9.
 
 ### 6. Item Performance
 
@@ -122,9 +122,11 @@ Total items equipped across the whole final board vs. placement:
 | 16-18 | 86 | 2.98 |
 | 19+ | 21 | 2.67 |
 
-Same trap as damage: more items on board is a proxy for more time alive, and more time alive is placement by definition — not treated as a real lever for the same reason. The per-item breakdown (min. 15 games) is more useful. Top: `Ornn Infinity Force` (16 games, 3.06 avg, 81.3% top-4) — a forged artifact item, small sample but a real standout. Bottom, and unexpected: **four of the worst-performing items are emblems** — Psionic (5.73 avg, 20% top-4, the single worst item in the dataset), Arbiter Emblem (4.60), Meeple/Astronaut (4.74), Dark Star (4.88). I don't think the emblem itself is causing the bad placement — an emblem gets slammed when a comp is already missing a natural holder of that trait, which is a patch, not a plan. The bad result more likely reflects the compromised board state that made the emblem necessary in the first place, not the item.
+This is basically Finding 5 again: more items on board is really a proxy for more time alive, and more time alive is placement by definition. I've included a more insightful angle below, but left this first instinct in and explained why it isn't optimal — I'm not treating the raw item-count relationship as a real lever for the same reason damage wasn't one.
 
-A correction to the tautology point above: raw item count is only a proxy for time-alive when comparing across *different* games, which run wildly different lengths. A fairer cut is item count against the average of the other seven players in the same lobby, which controls for how fast or slow that specific game ran.
+The per-item breakdown (min. 15 games) is more useful. Top: `Ornn Infinity Force` (16 games, 3.06 avg, 81.3% top-4) — a forged artifact item, small sample but a real standout. Bottom, and unexpected: **four of the worst-performing items are emblems** — Psionic (5.73 avg, 20% top-4, the single worst item in the dataset), Arbiter Emblem (4.60), Meeple/Astronaut (4.74), Dark Star (4.88). I don't think the emblem itself is causing the bad placement — an emblem gets slammed when a comp is already missing a natural holder of that trait, which is a patch, not a plan. The bad result more likely reflects the compromised board state that made the emblem necessary in the first place, not the item. Having to take an augment I don't want in order to slam a Dark Star emblem while on a loss streak (to reach 6 Dark Star), while the winstreaker across the lobby naturals a Jhin and hits 6 Dark Star anyway, is the sign of a bad game — a sign that there are better options than slamming an emblem if I'm just trying to save placement.
+
+Here's the correction referenced above: raw item count is only a proxy for time-alive when comparing across *different* games, which run wildly different lengths and have different portals, Space Gods, and PvE drops. A fairer cut is item count against the average of the other seven players in the same lobby, which better controls for those factors. Of course, when I bot-4, I'll tend to have fewer items than whoever top-4s, and vice versa.
 
 | Relative Itemization | Games | Avg Placement | Top4% |
 |---|---|---|---|
@@ -133,9 +135,9 @@ A correction to the tautology point above: raw item count is only a proxy for ti
 | Slightly above lobby | 138 | 3.91 | 60.9 |
 | Well above lobby | 189 | 3.07 | 77.8 |
 
-Pearson r = **-0.541** (n=556) — weaker than the damage and raw item-count correlations, and for good reason: this version isn't just restating game length. Having comparatively better itemization than the seven other players actually in that lobby tracks placement more honestly than comparing across games of totally different lengths. Still not fully clean — whoever places first in a given lobby also gets more time in that same game to itemize than whoever gets eliminated in round 10 — but it's a real signal, not just the tautology above wearing a different label.
+Pearson r = **-0.541** (n=556) — weaker than the damage and raw item-count correlations, and for good reason: this version isn't just restating game length. Being in a position to gain more items (while maintaining econ and hitting my final board) than the seven other players actually in that lobby tracks placement more honestly than comparing across games of totally different lengths. Still not fully clean — whoever places first in a given lobby also gets more time in that same game to itemize than whoever gets eliminated in round 10 — but it's cleaner.
 
-### 7. Session Length and Tilt
+### 7. Session Length (Tilt or Momentum?)
 
 Grouped games into sessions using a window function: any gap of 45+ minutes between consecutive games starts a new session (a game runs ~35-40 min, and the gap distribution has a clean break there). 220 sessions total, averaging 2.53 games each, longest run 15 games.
 
@@ -148,14 +150,16 @@ Grouped games into sessions using a window function: any gap of 45+ minutes betw
 | 6th-8th game | 42 | 4.05 | 59.5 |
 | 9th+ game | 14 | 3.29 | 64.3 |
 
-No tilt story here — placement doesn't trend worse the longer a session runs (the long tail, 9th+ game, is actually the best bucket, though only 14 games). The pattern that does hold up: **the first game of a session (4.55 avg) is consistently worse than the second (4.11 avg)**, across a much larger sample (220 vs. 119). Reads more like a warm-up effect than a tilt effect.
+I went in expecting I could find a tilt story — placement getting worse the longer I keep queuing — but my original instinct, that my long sessions run long *because* they're going well and I want to keep climbing, held up instead. There's no downward trend at all; if anything the long tail (9th+ game, 3.29 avg) is the best bucket, though that's only 14 games and I don't want to overreact to it. My read is that this reflects a sort of flow state where decision-making keeps improving the longer a good session runs. The honest counter-read: this data can't actually separate that from pure survivorship — I only reach a 9th game at all when things are already going well, so a session-selection effect would produce the exact same shape without any "flow state" required.
+
+**Another pattern that does hold up: the first game of a session (4.55 avg) is consistently worse than the second (4.11 avg)**, across a much larger sample (220 vs. 119). Reads more like a warm-up effect than a tilt effect.
 
 ## Limitations
 
 - Single-player dataset (563 games from one account) — findings describe this player's results with these comps in this meta, not general win rates.
 - Augment data unavailable in the current Riot API response; the original plan included an augment-vs-placement analysis that had to be dropped.
 - Comp identification uses exact trait-set matching, not fuzzy/clustered matching.
-- Damage and item-count correlations are included as methodological examples, not real findings.
+- Damage and item-count correlations are mostly mechanical (surviving longer produces both by definition), though Finding 5's Anima-cashout discussion argues there may be real signal mixed in that this data can't fully separate out — worth reading those two as open questions rather than settled ones either way.
 
 ## Reproducing
 
