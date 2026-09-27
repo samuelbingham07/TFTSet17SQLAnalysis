@@ -59,7 +59,7 @@ Does gold left at game-end/elimination predict placement? Sub-10 gold is grouped
 |---|---|---|---|
 | <10 | 423 | 4.39 | 52.2 |
 | 10-19 | 45 | 4.49 | 51.1 |
-| 20-29 | 31 | 3.96 | 54.8 |
+| 20-29 | 31 | 3.94 | 54.8 |
 | 30+ | 57 | 4.49 | 52.6 |
 
 Overall Pearson r = **-0.013** — essentially no linear relationship, and the bucketed view is fairly flat too (everything within half a placement of everything else, aside from a 20-29 bucket that's only 31 games and could be noise). The real signal shows up when the low-gold bucket is split by game stage: the 18 times I hit under 10 gold *before* round 25, despite a reasonable level, average 7.83 placement with **zero top-4 finishes** (15 eighths, 3 sevenths) — a clean "capped out early and died anyway" pattern. The other 405 low-gold games, happening at round 25+, look completely different: 4.23 avg, 54.6% top-4 — roughly average or better. And the detail that actually surprised me: **60 of my 82 wins end with under 10 gold left** — a won board doesn't need banked economy, so of course a lot of the best games end with an empty bank. Low gold isn't good or bad on its own; early it's a death spiral, late it's often just what winning looks like.
@@ -94,7 +94,7 @@ Weekly avg placement across the tracked stretch (Set 17 launch through early Jul
 | 15 | 35 | **3.63** | 68.6 |
 | 16 | 65 | 4.42 | 49.2 |
 | 17 | 63 | 4.52 | 49.2 |
-| 18-26 | 386 | ~4.4 | ~52 |
+| 18-27 | 393 | 4.42 | 51.9 |
 
 Honest read: there's no clean "steady improvement" story here. Week 15 (right after launch) was the strongest stretch by a wide margin, then results settled into a flat plateau around 4.2-4.6 for the following three months with no clear upward trend since. That's a more useful finding than a forced positive narrative — it raises a real follow-up question (was week 15 a strong comp that later got weaker, or just small-sample variance?) rather than answering one.
 
