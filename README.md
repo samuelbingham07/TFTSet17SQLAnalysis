@@ -1,6 +1,6 @@
 # TFT Set 17 SQL Analysis
 
-A SQL-driven case study of my own ranked Teamfight Tactics (Set 17) match history, pulled from Riot's TFT API into a normalized SQLite database. The goal: apply real SQL analysis to a dataset I have genuine expert context for interpreting, and treat the findings like a PM would — pose a question, run the query, interpret the result, and call out where a correlation isn't actually actionable.
+A SQL-driven case study of my own ranked Teamfight Tactics (Set 17) match history, pulled from Riot's TFT API into a normalized SQLite database. The goal: apply real SQL analysis to a dataset I have genuine expert context for interpreting, and treat the findings like a PM would: pose a question, run the query, interpret the result, and call out where a correlation isn't actually actionable.
 
 563 ranked games were pulled (Set 17 only, filtered out of 1000 total fetched games that also included leftover Set 16 history). 7 games were further excluded as outliers that don't reflect normal play (see **Data Cleaning** below), leaving **556 games** in the analysis.
 
@@ -13,25 +13,25 @@ src/load_db.py         parses cached JSON -> data/tft.db
 analysis/*.sql         the actual analysis queries, one file per question
 ```
 
-Schema: `matches`, `participants`, `units`, `unit_items`, `traits` (five tables), plus two views — `set17_matches`/`set17_participants` (scope everything to Set 17) and `set17_participants_clean` (excludes the outlier games described below). Augment data was part of the original plan but isn't present anywhere in Riot's current match-v1 response, so that analysis was dropped.
+Schema: `matches`, `participants`, `units`, `unit_items`, `traits` (five tables), plus two views: `set17_matches`/`set17_participants` (scope everything to Set 17) and `set17_participants_clean` (excludes the outlier games described below). Augment data was part of the original plan but isn't present anywhere in Riot's current match-v1 response, so that analysis was dropped.
 
 ## Data Cleaning: Excluding Non-Representative Games
 
 Two intentional playstyles show up in the data and would skew comp/trait performance if left in:
 
-1. **Selling the board to hyper-roll for a 3-star 5-cost**, ending in 2nd/3rd. Signature: abnormally low final unit count (there's a clean gap in the data — games sit at 3-4 units or jump straight to 6+, nothing in between) combined with `gold_left` near 0 and a very late `last_round`.
+1. **Selling the board to hyper-roll for a 3-star 5-cost**, ending in 2nd/3rd. Signature: abnormally low final unit count (there's a clean gap in the data: games sit at 3-4 units or jump straight to 6+, nothing in between) combined with `gold_left` near 0 and a very late `last_round`.
 2. **Conceding once 8th place was locked in**. Signature: `gold_left >= 100` at elimination (occurs exactly once across all 563 games) combined with a level too low for how far the game had progressed.
 
-The exclusion logic (`set17_participants_clean`) requires the low-unit-count *and* a concentrated 5-cost signal together — a full 9-11 unit board running 3 copies of a 5-cost is just a strong legitimate comp, not a reroll gamble, and was correctly left in. **7 of 563 games (1.2%) were excluded.**
+The exclusion logic (`set17_participants_clean`) requires the low-unit-count *and* a concentrated 5-cost signal together. A full 9-11 unit board running 3 copies of a 5-cost is just a strong legitimate comp, not a reroll gamble, and was correctly left in. **7 of 563 games (1.2%) were excluded.**
 
 ## Data Quality: Traits That Weren't Traits
 
-Two passes here, not one. First pass: the raw `traits` array Riot's API returns mixes real, player-facing traits with internal engine classification tags — role/stat labels used for backend logic that never show up in the trait bar. Caught by naming convention (bare stat word vs. a real name) and confirmed against real in-game trait names: `ManaTrait`, `APTrait`, `ASTrait`, `AssassinTrait`, `MeleeTrait`, `RangedTrait`, `HPTank`, `ShieldTank`, `ResistTank`, `SummonTrait`, `FlexTrait` — eleven names, all excluded.
+Two passes here, not one. First pass: the raw `traits` array Riot's API returns mixes real, player-facing traits with internal engine classification tags: role/stat labels used for backend logic that never show up in the trait bar. Caught by naming convention (bare stat word vs. a real name) and confirmed against real in-game trait names: `ManaTrait`, `APTrait`, `ASTrait`, `AssassinTrait`, `MeleeTrait`, `RangedTrait`, `HPTank`, `ShieldTank`, `ResistTank`, `SummonTrait`, `FlexTrait`: eleven names, all excluded.
 
 Second pass, prompted by more names not being recognized (`DRX`, `Admin`, `Stargazer Wolf` again): it turns out Riot's raw API identifiers frequently don't match the real in-game display name at all. Cross-referencing external trait databases (tactics.tools, blitz.gg) surfaced two distinct problems:
 
-1. **Wrong labels on my part.** The champion-linked "unique" traits display under completely different names than the champion itself: Morgana → **Dark Lady**, Jhin → **Eradicator**, Fiora → **Divine Duelist**, Rhaast → **Redeemer**, Shen → **Bulwark**, Sona → **Commander**, Vex → **Doomer**, Blitzcrank → **Party Animal**, Tahm Kench → **Oracle**, Graves → **Factory New**, Miss Fortune → **Gun Goddess**. `Astronaut` isn't a champion reference at all — the real trait is **Meeple**. `Admin` is real too, as **Arbiter**.
-2. **Genuinely fake.** `DRX` and `Stargazer_Wolf`/`Stargazer_Shield` don't exist in Set 17 at all, confirmed absent across three independent sources. The real Stargazer constellation set is Serpent, Huntress, Mountain, Altar, Medallion, Fountain, Boar — Wolf and Shield were never among them. These three are now excluded via `real_traits` the same way as the eleven engine tags; everything below uses the corrected names.
+1. **Wrong labels on my part.** The champion-linked "unique" traits display under completely different names than the champion itself: Morgana → **Dark Lady**, Jhin → **Eradicator**, Fiora → **Divine Duelist**, Rhaast → **Redeemer**, Shen → **Bulwark**, Sona → **Commander**, Vex → **Doomer**, Blitzcrank → **Party Animal**, Tahm Kench → **Oracle**, Graves → **Factory New**, Miss Fortune → **Gun Goddess**. `Astronaut` isn't a champion reference at all; the real trait is **Meeple**. `Admin` is real too, as **Arbiter**.
+2. **Genuinely fake.** `DRX` and `Stargazer_Wolf`/`Stargazer_Shield` don't exist in Set 17 at all, confirmed absent across three independent sources. The real Stargazer constellation set is Serpent, Huntress, Mountain, Altar, Medallion, Fountain, Boar. Wolf and Shield were never among them. These three are now excluded via `real_traits` the same way as the eleven engine tags; everything below uses the corrected names.
 
 ## Findings
 
@@ -49,11 +49,11 @@ Average placement by active trait (tier_current > 0), min. 10 games played, afte
 | ... | | | | |
 | Gun Goddess (Miss Fortune) | 16 | **5.56** | 18.8 | 6.3 |
 
-Dark Lady, Factory New, and Eradicator (Morgana, Graves, and Jhin's traits) are the strongest lines by a clear margin. Gun Goddess is a sharp outlier on the underperforming end — 5.56 avg placement and only 18.8% top-4 across 16 games, well below every other trait. Worth a closer look at *why* (itemization, positioning, or just a weak line in the current meta) before playing it again.
+Dark Lady, Factory New, and Eradicator (Morgana, Graves, and Jhin's traits) are the strongest lines by a clear margin. Gun Goddess is a sharp outlier on the underperforming end: 5.56 avg placement and only 18.8% top-4 across 16 games, well below every other trait. Worth a closer look at *why* (itemization, positioning, or just a weak line in the current meta) before playing it again.
 
 ### 2. Economy vs. Placement
 
-Does gold left at game-end/elimination predict placement? Sub-10 gold is grouped as one bucket rather than splitting out exactly-zero — both represent the same underlying decision (capping out a board and spending down, knowing elimination might be close), so the meaningful split is low-gold vs. banked-gold, and early vs. late.
+Does gold left at game-end/elimination predict placement? Sub-10 gold is grouped as one bucket rather than splitting out exactly-zero, since both represent the same underlying decision (capping out a board and spending down, knowing elimination might be close), so the meaningful split is low-gold vs. banked-gold, and early vs. late.
 
 | Gold Left | Games | Avg Placement | Top4% |
 |---|---|---|---|
@@ -62,7 +62,7 @@ Does gold left at game-end/elimination predict placement? Sub-10 gold is grouped
 | 20-29 | 31 | 3.94 | 54.8 |
 | 30+ | 57 | 4.49 | 52.6 |
 
-Overall Pearson r = **-0.013** — essentially no linear relationship, and the bucketed view is fairly flat too (everything within half a placement of everything else, aside from a 20-29 bucket that's only 31 games and could be noise). The real signal shows up when the low-gold bucket is split by game stage: the 18 times I hit under 10 gold *before* round 25, despite a reasonable level, average 7.83 placement with **zero top-4 finishes** (15 eighths, 3 sevenths) — a clean "capped out early and died anyway" pattern. The other 405 low-gold games, happening at round 25+, look completely different: 4.23 avg, 54.6% top-4 — roughly average or better. And the detail that actually surprised me: **60 of my 82 wins end with under 10 gold left** — a won board doesn't need banked economy, so of course a lot of the best games end with an empty bank. Low gold isn't good or bad on its own; early it's a death spiral, late it's often just what winning looks like.
+Overall Pearson r = **-0.013**: essentially no linear relationship, and the bucketed view is fairly flat too (everything within half a placement of everything else, aside from a 20-29 bucket that's only 31 games and could be noise). The real signal shows up when the low-gold bucket is split by game stage: the 18 times I hit under 10 gold *before* round 25, despite a reasonable level, average 7.83 placement with **zero top-4 finishes** (15 eighths, 3 sevenths), a clean "capped out early and died anyway" pattern. The other 405 low-gold games, happening at round 25+, look completely different: 4.23 avg, 54.6% top-4, roughly average or better. And the detail that actually surprised me: **60 of my 82 wins end with under 10 gold left**. A won board doesn't need banked economy, so of course a lot of the best games end with an empty bank. Low gold isn't good or bad on its own; early it's a death spiral, late it's often just what winning looks like.
 
 ### 3. Comp Identification
 
@@ -81,9 +81,9 @@ Grouping games by the exact set of active traits (with all 14 non-real names out
 | Meeple / Fateweaver / Timebreaker | 13 | **5.69** | 15.4 | 7.7 |
 | Meeple (alone) | 8 | **6.88** | 0.0 | 0.0 |
 
-The best line is Meeple/Fateweaver/Bulwark/Timebreaker (3.07 avg, 85.7% top-4, 35.7% win). The bottom two rows isolate one trait at a time and are the standout finding: drop Bulwark and the same core (Meeple/Fateweaver/Timebreaker) falls to 5.69 avg, 15.4% top-4, 7.7% win across 13 games; drop Fateweaver and Timebreaker too and it's just Meeple alone — 8 games, 6.88 avg, zero top-4s, zero wins. Placement gets worse in a straight line as pieces of the comp are removed. I hadn't clocked how load-bearing Bulwark specifically was until DRX stopped contaminating the comp signature and let these variants separate into their own rows. Separately, Divine Duelist/Psionic/Oracle is my most-played comp on this list (22 games) and hits top-4 72.7% of the time, but converts to a win only 4.5% of the time — a comp with a ceiling, good for stabilizing a rough lobby but not for closing games out.
+The best line is Meeple/Fateweaver/Bulwark/Timebreaker (3.07 avg, 85.7% top-4, 35.7% win). The bottom two rows isolate one trait at a time and are the standout finding: drop Bulwark and the same core (Meeple/Fateweaver/Timebreaker) falls to 5.69 avg, 15.4% top-4, 7.7% win across 13 games; drop Fateweaver and Timebreaker too and it's just Meeple alone: 8 games, 6.88 avg, zero top-4s, zero wins. Placement gets worse in a straight line as pieces of the comp are removed. I hadn't clocked how load-bearing Bulwark specifically was until DRX stopped contaminating the comp signature and let these variants separate into their own rows. Separately, Divine Duelist/Psionic/Oracle is my most-played comp on this list (22 games) and hits top-4 72.7% of the time, but converts to a win only 4.5% of the time: a comp with a ceiling, good for stabilizing a rough lobby but not for closing games out.
 
-*Caveat: this groups by exact trait-set match, so two games that are "the same comp" with one flex-slot trait swapped won't merge — a simplification, not a bug.*
+*Caveat: this groups by exact trait-set match, so two games that are "the same comp" with one flex-slot trait swapped won't merge. A simplification, not a bug.*
 
 ### 4. Performance Trend Over Time
 
@@ -96,7 +96,7 @@ Weekly avg placement across the tracked stretch (Set 17 launch through early Jul
 | 17 | 63 | 4.52 | 49.2 |
 | 18-27 | 393 | 4.42 | 51.9 |
 
-Honest read: there's no clean "steady improvement" story here. Week 15 (right after launch) was the strongest stretch by a wide margin, then results settled into a flat plateau around 4.2-4.6 for the following three months with no clear upward trend since. That's a more useful finding than a forced positive narrative — it raises a real follow-up question (was week 15 a strong comp that later got weaker, or just small-sample variance?) rather than answering one.
+Honest read: there's no clean "steady improvement" story here. Week 15 (right after launch) was the strongest stretch by a wide margin, then results settled into a flat plateau around 4.2-4.6 for the following three months with no clear upward trend since. That's a more useful finding than a forced positive narrative, because it raises a real follow-up question (was week 15 a strong comp that later got weaker, or just small-sample variance?) rather than answering one.
 
 ### 5. Damage Output vs. Placement (and why it's a trap)
 
@@ -108,7 +108,7 @@ Honest read: there's no clean "steady improvement" story here. Week 15 (right af
 | 150-199 | 86 | 1.43 | 100.0 |
 | 200+ | 25 | 1.12 | 100.0 |
 
-Pearson r = **-0.916**, by far the strongest correlation in the whole analysis. Unsurprisingly — if you deal damage, you're surviving rounds and outliving opponents, so you place better. The nuance is in whether the final board is independent of damage dealt. Arguably the highest-capping board in the game is an Anima Cashout board, but an Anima game that relies on loss-streaking to be successful is paradoxical to this correlation, because you don't deal as much damage as a game where you win-streak the whole time. What a deeper analysis would likely reveal is that ending the game on a board with an obvious cashout signal (a 3-starred carry off a 400-600 gold Anima cashout, for instance) results in a high placement but not correspondingly high damage dealt. As of now, I can't tell what portion of the lower-damage games reflect this risky loss-streak-into-winnout playstyle, whether it's Anima or Fast 9.
+Pearson r = **-0.916**, by far the strongest correlation in the whole analysis. Unsurprisingly: if you deal damage, you're surviving rounds and outliving opponents, so you place better. The nuance is in whether the final board is independent of damage dealt. Arguably the highest-capping board in the game is an Anima Cashout board, but an Anima game that relies on loss-streaking to be successful is paradoxical to this correlation, because you don't deal as much damage as a game where you win-streak the whole time. What a deeper analysis would likely reveal is that ending the game on a board with an obvious cashout signal (a 3-starred carry off a 400-600 gold Anima cashout, for instance) results in a high placement but not correspondingly high damage dealt. As of now, I can't tell what portion of the lower-damage games reflect this risky loss-streak-into-winnout playstyle, whether it's Anima or Fast 9.
 
 ### 6. Item Performance
 
@@ -122,9 +122,9 @@ Total items equipped across the whole final board vs. placement:
 | 16-18 | 86 | 2.98 |
 | 19+ | 21 | 2.67 |
 
-This is basically Finding 5 again: more items on board is really a proxy for more time alive, and more time alive is placement by definition. I've included a more insightful angle below, but left this first instinct in and explained why it isn't optimal — I'm not treating the raw item-count relationship as a real lever for the same reason damage wasn't one.
+This is basically Finding 5 again: more items on board is really a proxy for more time alive, and more time alive is placement by definition. I've included a more insightful angle below, but left this first instinct in and explained why it isn't optimal. I'm not treating the raw item-count relationship as a real lever for the same reason damage wasn't one.
 
-The per-item breakdown (min. 15 games) is more useful. Top: `Ornn Infinity Force` (16 games, 3.06 avg, 81.3% top-4) — a forged artifact item, small sample but a real standout. Bottom, and unexpected: **four of the worst-performing items are emblems** — Psionic (5.73 avg, 20% top-4, the single worst item in the dataset), Arbiter Emblem (4.60), Meeple/Astronaut (4.74), Dark Star (4.88). I don't think the emblem itself is causing the bad placement — an emblem gets slammed when a comp is already missing a natural holder of that trait, which is a patch, not a plan. The bad result more likely reflects the compromised board state that made the emblem necessary in the first place, not the item. Having to take an augment I don't want in order to slam a Dark Star emblem while on a loss streak (to reach 6 Dark Star), while the winstreaker across the lobby naturals a Jhin and hits 6 Dark Star anyway, is the sign of a bad game — a sign that there are better options than slamming an emblem if I'm just trying to save placement.
+The per-item breakdown (min. 15 games) is more useful. Top: `Ornn Infinity Force` (16 games, 3.06 avg, 81.3% top-4), a forged artifact item, small sample but a real standout. Bottom, and unexpected: **four of the worst-performing items are emblems**: Psionic (5.73 avg, 20% top-4, the single worst item in the dataset), Arbiter Emblem (4.60), Meeple/Astronaut (4.74), Dark Star (4.88). I don't think the emblem itself is causing the bad placement. An emblem gets slammed when a comp is already missing a natural holder of that trait, which is a patch, not a plan. The bad result more likely reflects the compromised board state that made the emblem necessary in the first place, not the item. Having to take an augment I don't want in order to slam a Dark Star emblem while on a loss streak (to reach 6 Dark Star), while the winstreaker across the lobby naturals a Jhin and hits 6 Dark Star anyway, is the sign of a bad game, and a sign that there are better options than slamming an emblem if I'm just trying to save placement.
 
 Here's the correction referenced above: raw item count is only a proxy for time-alive when comparing across *different* games, which run wildly different lengths and have different portals, Space Gods, and PvE drops. A fairer cut is item count against the average of the other seven players in the same lobby, which better controls for those factors. Of course, when I bot-4, I'll tend to have fewer items than whoever top-4s, and vice versa.
 
@@ -135,7 +135,7 @@ Here's the correction referenced above: raw item count is only a proxy for time-
 | Slightly above lobby | 138 | 3.91 | 60.9 |
 | Well above lobby | 189 | 3.07 | 77.8 |
 
-Pearson r = **-0.541** (n=556) — weaker than the damage and raw item-count correlations, and for good reason: this version isn't just restating game length. Being in a position to gain more items (while maintaining econ and hitting my final board) than the seven other players actually in that lobby tracks placement more honestly than comparing across games of totally different lengths. Still not fully clean — whoever places first in a given lobby also gets more time in that same game to itemize than whoever gets eliminated in round 10 — but it's cleaner.
+Pearson r = **-0.541** (n=556), weaker than the damage and raw item-count correlations, and for good reason: this version isn't just restating game length. Being in a position to gain more items (while maintaining econ and hitting my final board) than the seven other players actually in that lobby tracks placement more honestly than comparing across games of totally different lengths. Still not fully clean: whoever places first in a given lobby also gets more time in that same game to itemize than whoever gets eliminated in round 10, but it's cleaner.
 
 ### 7. Session Length (Tilt or Momentum?)
 
@@ -150,16 +150,16 @@ Grouped games into sessions using a window function: any gap of 45+ minutes betw
 | 6th-8th game | 42 | 4.05 | 59.5 |
 | 9th+ game | 14 | 3.29 | 64.3 |
 
-I went in expecting I could find a tilt story — placement getting worse the longer I keep queuing — but my original instinct, that my long sessions run long *because* they're going well and I want to keep climbing, held up instead. There's no downward trend at all; if anything the long tail (9th+ game, 3.29 avg) is the best bucket, though that's only 14 games and I don't want to overreact to it. My read is that this reflects a sort of flow state where decision-making keeps improving the longer a good session runs. The honest counter-read: this data can't actually separate that from pure survivorship — I only reach a 9th game at all when things are already going well, so a session-selection effect would produce the exact same shape without any "flow state" required.
+I went in expecting I could find a tilt story (placement getting worse the longer I keep queuing), but my original instinct, that my long sessions run long *because* they're going well and I want to keep climbing, held up instead. There's no downward trend at all; if anything the long tail (9th+ game, 3.29 avg) is the best bucket, though that's only 14 games and I don't want to overreact to it. My read is that this reflects a sort of flow state where decision-making keeps improving the longer a good session runs. The honest counter-read: this data can't actually separate that from pure survivorship: I only reach a 9th game at all when things are already going well, so a session-selection effect would produce the exact same shape without any "flow state" required.
 
 **Another pattern that does hold up: the first game of a session (4.55 avg) is consistently worse than the second (4.11 avg)**, across a much larger sample (220 vs. 119). Reads more like a warm-up effect than a tilt effect.
 
 ## Limitations
 
-- Single-player dataset (563 games from one account) — findings describe this player's results with these comps in this meta, not general win rates.
+- Single-player dataset (563 games from one account); findings describe this player's results with these comps in this meta, not general win rates.
 - Augment data unavailable in the current Riot API response; the original plan included an augment-vs-placement analysis that had to be dropped.
 - Comp identification uses exact trait-set matching, not fuzzy/clustered matching.
-- Damage and item-count correlations are mostly mechanical (surviving longer produces both by definition), though Finding 5's Anima-cashout discussion argues there may be real signal mixed in that this data can't fully separate out — worth reading those two as open questions rather than settled ones either way.
+- Damage and item-count correlations are mostly mechanical (surviving longer produces both by definition), though Finding 5's Anima-cashout discussion argues there may be real signal mixed in that this data can't fully separate out. Those two are worth reading as open questions rather than settled ones either way.
 
 ## Reproducing
 
